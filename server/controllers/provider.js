@@ -1,5 +1,5 @@
 import User from '../models/user';
-import FoodItem from '../modelExtns/foodItem'
+import FoodItem from '../models/foodItem'
 import jwt from 'jwt-simple';
 import moment from 'moment';
 import config from '../../config/env/index'
@@ -18,6 +18,8 @@ function register(req, res, next) {
         user.city = userResponse.city;
         user.doYouDeliverFlag = userResponse.doYouDeliverFlag;
         user.deliveryAddtnlComments = userResponse.deliveryAddtnlComments;
+        user.deliveryMinOrder = userResponse.deliveryMinOrder;
+        user.deliveryRadius = userResponse.deliveryRadius;
         user.saveAsync()
             .then((savedUser) => {
                 res.json(savedUser);
@@ -60,7 +62,8 @@ function addOrEditFoodItem(req, res, next) {
                     nutfree:userResponse.nutfree,
                     oilfree:userResponse.oilfree,
                     nondairy:userResponse.nondairy,
-                    indianFasting:userResponse.indianFasting
+                    indianFasting:userResponse.indianFasting,
+                    firstItem:true
                 })
                 foodItem.save(function(err,savedFooditem){
                     user.foodItems.push(savedFooditem._id);
