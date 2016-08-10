@@ -16,6 +16,8 @@ function register(req, res, next) {
         user.streetName = userResponse.streetName;
         user.crosStreetName = userResponse.crosStreetName;
         user.city = userResponse.city;
+        user.pickUpFlag = userResponse.pickUpFlag;
+        user.pickUpAddtnlComments = userResponse.pickUpAddtnlComments;
         user.doYouDeliverFlag = userResponse.doYouDeliverFlag;
         user.deliveryAddtnlComments = userResponse.deliveryAddtnlComments;
         user.deliveryMinOrder = userResponse.deliveryMinOrder;
