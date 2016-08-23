@@ -63,7 +63,6 @@ describe('# POST /api/users/signUp && /api/providers/registration', () => {
                             user: res.body.user.name,
                             token: res.body.token
                         })
-                        console.log(tokenArr);
                         callback(null, res);
                     })
             },
