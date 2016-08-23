@@ -3,9 +3,8 @@ import httpStatus from 'http-status';
 import chai from 'chai';
 import { expect } from 'chai';
 import app from '../../index';
-import nock from 'nock';
 import config from '../../config/env'
-import async from 'async'
+
 
 chai.config.includeStack = true;
 const baseUrl = config.baseUrl;
