@@ -8,7 +8,7 @@ function register(req, res, next) {
     const userResponse = req.body;
     const loggedInUser = req.user;
     User.findOne(loggedInUser, function(err, user) {
-        user.userType = userResponse.userType;
+        user.userType ='provider';
         user.title = userResponse.title;
         user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
         user.includeAddressInEmail = userResponse.includeAddressInEmail;
@@ -22,10 +22,9 @@ function register(req, res, next) {
         user.deliveryAddtnlComments = userResponse.deliveryAddtnlComments;
         user.deliveryMinOrder = userResponse.deliveryMinOrder;
         user.deliveryRadius = userResponse.deliveryRadius;
-        user.saveAsync()
-            .then((savedUser) => {
-                res.json(savedUser);
-            })
+        user.save(function(err,savedUser){
+            res.json(savedUser);
+        })
     });
 }
 
@@ -70,13 +69,12 @@ function addOrEditFoodItem(req, res, next) {
                 foodItem.save(function(err,savedFooditem){
                     user.foodItems.push(savedFooditem._id);
                     user.save(function(err,savedUser){
-                        res.json(savedUser);
+                        res.json(savedFooditem);
                     })
                 })      
             }
         }
     });
-
 }
 
 export default { register, addOrEditFoodItem };

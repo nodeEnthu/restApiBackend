@@ -17,8 +17,12 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoodItem'
     }],
-    pickUpFlag:{ type: Boolean, default: true },
-    pickUpAddtnlComments:{ type: String, default: '' },
+    // loc: {
+    //     type: { type: String, default: 'Point' },
+    //     coordinates: [Number],
+    // },
+    pickUpFlag: { type: Boolean, default: true },
+    pickUpAddtnlComments: { type: String, default: '' },
     title: String,
     keepAddressPrivateFlag: { type: Boolean, default: false },
     includeAddressInEmail: { type: Boolean, default: true },
@@ -42,6 +46,7 @@ const UserSchema = new mongoose.Schema({
 /**
  * Methods
  */
+//UserSchema.index({ "loc": "2dsphere" });
 UserSchema.method({});
 
 /**

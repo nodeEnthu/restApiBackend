@@ -22,9 +22,11 @@ function createJWT(user) {
  */
 function load(req, res) {
     const loggedInUser = req.user;
-    User.findById(loggedInUser, function(err, user) {
-        res.json(user);
-    });
+    User.findOne(loggedInUser)
+        .populate('foodItems')
+        .exec(function(err,userAndFoodItems){
+            res.json(userAndFoodItems)
+        })
 }
 
 /**
@@ -49,10 +51,10 @@ function create(req, res, next) {
         if (result && result.length > 0) {
             let alreadyPresentUser = result[0];
             let token = createJWT(alreadyPresentUser);
-                    res.send({ 
-                            user: alreadyPresentUser, 
-                            token: token 
-                        });
+                res.send({ 
+                        user: alreadyPresentUser, 
+                        token: token 
+                    });
         } else {
             const user = new User({
                 name: req.body.name,
