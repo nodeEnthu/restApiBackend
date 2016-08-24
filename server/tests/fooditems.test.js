@@ -5,15 +5,17 @@ import { expect } from 'chai';
 import app from '../../index';
 import config from '../../config/env';
 import async from 'async';
+import faker from 'faker';
+
 chai.config.includeStack = true;
 let tokenArr = [];
 
 // before running any tests create a user
 let user = {
     name: 'joomla',
-    email: 'joomla@gmail.com',
+    email: faker.internet.email(),
     provider: 'fb',
-    img: 'https://graph.facebook.com/' + 'joomla' + '/picture?type=small',
+    img: faker.image.imageUrl(),
     fbUserID: 'randomUserId',
     userType: 'provider',
     title: 'Chilli me',

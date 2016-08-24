@@ -7,7 +7,7 @@ import config from '../../config/env/index'
 function register(req, res, next) {
     const userResponse = req.body;
     const loggedInUser = req.user;
-    User.findOne(loggedInUser, function(err, user) {
+    User.findById(loggedInUser, function(err, user) {
         user.userType ='provider';
         user.title = userResponse.title;
         user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
@@ -32,7 +32,7 @@ function addOrEditFoodItem(req, res, next) {
     const userResponse = req.body;
     const loggedInUser = req.user;
     // first get the user
-    User.findOne(loggedInUser, function(err, user) {
+    User.findById(loggedInUser, function(err, user) {
         if (!user) {
             res.send("not able to find the person");
         } else {

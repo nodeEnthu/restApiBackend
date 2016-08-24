@@ -4,6 +4,7 @@ import chai from 'chai';
 import { expect } from 'chai';
 import app from '../../index';
 import config from '../../config/env'
+import faker from 'faker';
 
 
 chai.config.includeStack = true;
@@ -12,9 +13,9 @@ let tokenArr = [];
 describe('## Provider APIs', () => {
     let user = {
         name: 'joomla',
-        email: 'joomla@gmail.com',
+        email: faker.internet.email(),
         provider: 'fb',
-        img: 'https://graph.facebook.com/' + 'joomla' + '/picture?type=small',
+        img: faker.image.imageUrl(),
         fbUserID: 'randomUserId',
         userType :'provider',
         title: 'Chilli me',

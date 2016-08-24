@@ -22,7 +22,7 @@ function createJWT(user) {
  */
 function load(req, res) {
     const loggedInUser = req.user;
-    User.findOne(loggedInUser)
+    User.findById(loggedInUser)
         .populate('foodItems')
         .exec(function(err,userAndFoodItems){
             res.json(userAndFoodItems)
@@ -45,11 +45,11 @@ function get(req, res) {
  */
 function create(req, res, next) {
     const keyForId = req.body.provider + 'UserID';
-    User.find({
+    User.findOne({
         email: req.body.email
     }, function(err, result) {
         if (result && result.length > 0) {
-            let alreadyPresentUser = result[0];
+            let alreadyPresentUser = result;
             let token = createJWT(alreadyPresentUser);
                 res.send({ 
                         user: alreadyPresentUser, 

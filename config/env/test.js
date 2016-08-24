@@ -1,6 +1,6 @@
 export default {
 	env: 'test',
-	db: 'mongodb://localhost/express-mongoose-es6-rest-api-test',
+	db: 'mongodb://localhost:27017/test',
 	port: 3000,
 	baseUrl:'http://localhost:3000',
 	TOKEN_SECRET:'AVERYSECRETIVEINFO',

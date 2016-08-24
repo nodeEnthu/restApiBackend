@@ -7,7 +7,6 @@ export default function ensureAuthenticated(req, res, next) {
     return res.status(401).send({ message: 'Please make sure your request has an Authorization header' });
   }
   var token = req.header('Authorization').split(' ')[1];
-
   var payload = null;
   try {
     payload = jwt.decode(token, config.TOKEN_SECRET);
