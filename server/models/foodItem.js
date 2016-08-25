@@ -3,6 +3,12 @@ import mongoose from 'mongoose'
 var FoodItem_Schema = new mongoose.Schema({
     name: String,
     description: String,
+    _creator:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    // This is temporary before putting stuff in Amazon
+    img:{type:String,default:"http://lorempixel.com/400/200/food"},
     placeOrderBy: { type: Date},
     serviceDate: { type: Date},
     deliveryFlag:{type:Boolean, default:false}, 
@@ -11,7 +17,6 @@ var FoodItem_Schema = new mongoose.Schema({
     pickUpFlag:Boolean,
     pickUpStartTime:{ type: Date},
     pickUpEndTime:{ type: Date},
-    pickUpAddtnlComments:String,
     organic:{type:Boolean, default:false},
     vegetarian:{type:Boolean, default:false},
     glutenfree:{type:Boolean, default:false},

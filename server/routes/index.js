@@ -1,7 +1,8 @@
 import express from 'express';
 import userRoutes from './user';
 import providerRoutes from './provider';
-import locationRoutes from './location'
+import locationRoutes from './location';
+import queryRoutes from './query';
 const router = express.Router();	// eslint-disable-line new-cap
 
 /** GET /health-check - Check service health */
@@ -15,5 +16,7 @@ router.use('/users', userRoutes);
 router.use('/providers', providerRoutes);
 
 router.use('/locations',locationRoutes);
+router.use('/query',queryRoutes);
+
 
 export default router;

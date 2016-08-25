@@ -43,9 +43,11 @@ function addOrEditFoodItem(req, res, next) {
             } else {
                 // its a new item
                 //create a new entry
+                console.log('user._id',user._id);
                 const foodItem = new FoodItem({
                     name :  userResponse.name,
                     description : userResponse.description,
+                     _creator: user._id,
                     placeOrderBy : userResponse.placeOrderBy,
                     serviceDate : userResponse.serviceDate,
                     deliveryFlag : userResponse.deliveryFlag,
@@ -71,7 +73,7 @@ function addOrEditFoodItem(req, res, next) {
                     user.save(function(err,savedUser){
                         res.json(savedFooditem);
                     })
-                })      
+                })    
             }
         }
     });
