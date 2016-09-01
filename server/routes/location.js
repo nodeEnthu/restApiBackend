@@ -1,6 +1,6 @@
 import express from 'express';
 import locationCtrl from '../controllers/location';
-import ensureAuthenticated from '../helpers/ensureAuthenticated';
+import ensureAuthenticated, {checkLogin} from '../helpers/ensureAuthenticated';
 const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/zipcodeTypeAssist')
@@ -9,10 +9,10 @@ router.route('/zipcodeTypeAssist')
 
 router.route('/address')
    	/** GET /api/locations/address - Get adress given latitude and longitude */
-    .get(locationCtrl.address)
+    .get(checkLogin,locationCtrl.address)
 
 router.route('/addressTypeAssist')
-   	/** GET /api/locations/addressTypeAssist - Get list of users */
+   	/** GET /api/locations/addressTypeAssist - Get list of predictions for addresses */
     .get(locationCtrl.addressTypeAssist);
 
 export default router;

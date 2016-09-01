@@ -1,6 +1,9 @@
 import mongoose from 'mongoose'
 import Zipcode from '../models/zipcode'
+import User from '../models/user';
 import request from 'request'
+import config from '../../config/env/index'
+
 /**
  * Load
  */
@@ -11,7 +14,7 @@ function getLatAndLong(address, cb) {
         uri: 'https://maps.googleapis.com/maps/api/geocode/json',
         qs: {
             address: address,
-            key: 'AIzaSyBemekNaepB2_YeBtYSjdbnsPW9F9W8c5E'
+            key: config.GOOGLE_GEOCODING
         }
     }, function(error, response, body) {
         if (error) {
@@ -20,7 +23,7 @@ function getLatAndLong(address, cb) {
             let resolvedResponse = JSON.parse(body);
             // take the first google recommendation
             let bestAddress = resolvedResponse.results[0].formatted_address;
-            return cb(null,{
+            return cb(null, {
                 latitude: bestAddress.geometry.location.lat,
                 longitude: bestAddress.geometry.location.lng
             })
@@ -38,19 +41,28 @@ function zipcodeTypeAssist(req, res, next) {
 function address(req, res, next) {
     let latitude = req.query.latitude;
     let longitude = req.query.longitude;
+
+    /* 
+     *   detect if the user is logged in...
+     *   note that this detection logic coming from middleware
+     *   if the user is logged in .. add this latitude to his most recent 
+     *   address used which will be used as default when he comed in next time
+     */
+
     request({
         method: 'get',
         uri: 'https://maps.googleapis.com/maps/api/geocode/json',
         qs: {
             latlng: latitude + ',' + longitude,
-            key: 'AIzaSyBemekNaepB2_YeBtYSjdbnsPW9F9W8c5E'
+            key: config.GOOGLE_GEOCODING
         }
     }, function(error, response, body) {
         let resolvedResponse = JSON.parse(body);
         // take the first google recommendation
-        let formattedResponse = resolvedResponse.results[0].formatted_address;
+        let formattedResponse = resolvedResponse.results[0];
         res.json({
-            address: formattedResponse
+            address: formattedResponse.formatted_address,
+            place_id: formattedResponse.place_id
         })
     })
 }
@@ -62,16 +74,19 @@ function addressTypeAssist(req, res, next) {
         uri: 'https://maps.googleapis.com/maps/api/place/autocomplete/json',
         qs: {
             input: searchText,
-            key: 'AIzaSyCHB9OV1Ce85zJfCSiqZB1fL1co6y2xK9o'
+            key: config.GOOGLE_PLACES_SECRET
         }
     }, function(error, response, body) {
         let resolvedResponse = JSON.parse(body);
         let formattedResponse = [];
         for (let i = 0; i < resolvedResponse.predictions.length; i++) {
-            formattedResponse.push(resolvedResponse.predictions[i].description);
+            formattedResponse.push({
+                address: resolvedResponse.predictions[i].description,
+                place_id: resolvedResponse.predictions[i].place_id
+            });
         }
         res.json({
-            addresses: formattedResponse
+            addresses: formattedResponse,
         })
     })
 }
