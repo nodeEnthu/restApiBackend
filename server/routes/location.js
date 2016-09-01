@@ -5,6 +5,14 @@ const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/zipcodeTypeAssist')
    	/** GET /api/locations/zipcodeTypeAssist - Get list of users */
-    .get(locationCtrl.zipcodeTypeAssist)
+    .get(locationCtrl.zipcodeTypeAssist);
+
+router.route('/address')
+   	/** GET /api/locations/address - Get adress given latitude and longitude */
+    .get(locationCtrl.address)
+
+router.route('/addressTypeAssist')
+   	/** GET /api/locations/addressTypeAssist - Get list of users */
+    .get(locationCtrl.addressTypeAssist);
 
 export default router;

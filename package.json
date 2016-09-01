@@ -14,7 +14,6 @@
     "build": "gulp",
     "lint": "gulp lint",
     "test": "gulp mocha",
-    "commit": "git-cz",
     "report-coverage": "coveralls < ./coverage/lcov.info"
   },
   "repository": {
@@ -55,6 +54,7 @@
     "morgan": "~1.6.1",
     "nock": "^8.0.0",
     "path": "^0.12.7",
+    "request": "^2.74.0",
     "socket.io": "^1.4.8",
     "winston": "^2.1.1"
   },
@@ -92,15 +92,7 @@
     "validate-commit-msg": "2.0.0"
   },
   "license": "MIT",
-  "config": {
-    "ghooks": {
-      "pre-commit": "npm run lint && npm test",
-      "commit-msg": "validate-commit-msg"
-    },
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
-  },
+  "config": {},
   "babel": {
     "presets": [
       "es2015",
