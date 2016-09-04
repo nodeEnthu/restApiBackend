@@ -17,10 +17,17 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoodItem'
     }],
-    // loc: {
-    //     type: { type: String, default: 'Point' },
-    //     coordinates: [Number],
-    // },
+    loc: { // this is the most recent user enetred location for searching foodItems
+        type: { type: String, default: 'Point' },
+        coordinates: { type: [Number], default: [0, 0] },
+        place_id: { type: String },
+        searchText: { type: String },
+    },
+    userSeachLocations: [{
+        searchText: { type: String },
+        coordinates: { type: [Number], default: [0, 0] },
+        place_id: { type: String }
+    }],
     pickUpFlag: { type: Boolean, default: true },
     pickUpAddtnlComments: { type: String, default: '' },
     title: String,
@@ -46,7 +53,7 @@ const UserSchema = new mongoose.Schema({
 /**
  * Methods
  */
-//UserSchema.index({ "loc": "2dsphere" });
+UserSchema.index({ "loc": "2dsphere" });
 UserSchema.method({});
 
 /**

@@ -9,10 +9,14 @@ router.route('/zipcodeTypeAssist')
 
 router.route('/address')
    	/** GET /api/locations/address - Get adress given latitude and longitude */
-    .get(checkLogin,locationCtrl.address)
+    .get(locationCtrl.address)
 
 router.route('/addressTypeAssist')
    	/** GET /api/locations/addressTypeAssist - Get list of predictions for addresses */
     .get(locationCtrl.addressTypeAssist);
+
+router.route('/registerMostRecentSearchLocation')
+   	/** GET /api/locations/registerLocation - Get list of predictions for addresses */
+    .get(ensureAuthenticated,locationCtrl.registerMostRecentSearchLocation);
 
 export default router;

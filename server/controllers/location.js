@@ -8,12 +8,12 @@ import config from '../../config/env/index'
  * Load
  */
 
-function getLatAndLong(address, cb) {
+function getLatAndLong(place_id, cb) {
     request({
         method: 'get',
         uri: 'https://maps.googleapis.com/maps/api/geocode/json',
         qs: {
-            address: address,
+            place_id: place_id,
             key: config.GOOGLE_GEOCODING
         }
     }, function(error, response, body) {
@@ -21,11 +21,12 @@ function getLatAndLong(address, cb) {
             return cb(error);
         } else {
             let resolvedResponse = JSON.parse(body);
-            // take the first google recommendation
-            let bestAddress = resolvedResponse.results[0].formatted_address;
+            // take the first google recommendation .. i trust you google dont fuck up
+            let bestAddress = resolvedResponse.results[0];
             return cb(null, {
                 latitude: bestAddress.geometry.location.lat,
-                longitude: bestAddress.geometry.location.lng
+                longitude: bestAddress.geometry.location.lng,
+                place_id: place_id
             })
         }
     })
@@ -90,4 +91,42 @@ function addressTypeAssist(req, res, next) {
         })
     })
 }
-export default { zipcodeTypeAssist, address, addressTypeAssist };
+
+function registerMostRecentSearchLocation(req, res, next) {
+    const loggedInUser = req.user;
+    const { address, place_id } = req.query;
+    User.findById(loggedInUser)
+        .exec(function(err, user) {
+            getLatAndLong(place_id, function(err, result) {
+                if (err) {
+                    res.json({ error: err });
+                } else {
+                    user.loc = {
+                        "type": "Point",
+                        "coordinates": [result.longitude, result.latitude],
+                        place_id: place_id,
+                        searchText: address
+                    };
+                    // check whether the location already exists in userSeachLocations with place_id
+                    let saveLoc = true;
+                    for (var i = 0; i < user.userSeachLocations.length; i++) {
+                        if (user.userSeachLocations[i].place_id === place_id) {
+                            saveLoc = false;
+                            break;
+                        }
+                    }
+                    if (saveLoc) {
+                        user.userSeachLocations.push({
+                            "coordinates": [result.longitude, result.latitude],
+                            place_id: place_id,
+                            searchText: address
+                        })
+                    }
+                    user.save(function(err, savedUser) {
+                        res.json(savedUser);
+                    })
+                }
+            })
+        })
+}
+export default { zipcodeTypeAssist, address, addressTypeAssist, registerMostRecentSearchLocation };
