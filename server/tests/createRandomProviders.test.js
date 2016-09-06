@@ -7,16 +7,19 @@ import config from '../../config/env';
 import async from 'async';
 import fs from 'fs';
 import faker from 'faker';
+import generateRandomPoints from 'utils/geo/generateRandomLocs'
+
 
 faker.locale = "en_US";
 chai.config.includeStack = true;
 let tokenArr = [];
-let n = 100// number of providers
+let n = 4 // number of providers
 let userSignUpFuncArr = [];
 let users = [];
 let providerRegistrationFuncArr = [];
 let providerFoodItemEntryFuncArr = [];
-
+let randomGeoPoints = generateRandomPoints({'lat':37.774248, 'lng':-121.990731}, 16000, n);
+let registerALocationForProviderFuncArr = [];
 Date.prototype.yyyymmdd = function() {
   var mm = this.getMonth() + 1; // getMonth() is zero-based
   var dd = this.getDate();
@@ -116,6 +119,11 @@ function providerFoodItemEntryFunc(index) {
             })
     }
 }
+function registerALocationForProviderFunc(index){
+    return function(cb){
+        cb();
+    }
+}
 describe("# Creating random providers for the search view", function() {
     // this is not a test but creating data for the search view
 
@@ -123,6 +131,7 @@ describe("# Creating random providers for the search view", function() {
     for (var i = 0; i < n; i++) {
         userSignUpFuncArr.push(userSignUpFunc(i));
         providerRegistrationFuncArr.push(providerRegistrationFunc(i));
+        registerALocationForProviderFuncArr.push(registerALocationForProviderFunc(i));
         providerFoodItemEntryFuncArr.push(providerFoodItemEntryFunc(i));
     }
     async.series(
@@ -134,6 +143,11 @@ describe("# Creating random providers for the search view", function() {
             },
             function(cb) {
                 async.parallel(providerRegistrationFuncArr, function(err, results) {
+                    cb();
+                })
+            },
+            function(cb){
+                async.parallel(registerALocationForProviderFuncArr, function(err, results) {
                     cb();
                 })
             },

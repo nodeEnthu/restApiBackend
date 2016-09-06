@@ -9,7 +9,6 @@ function foodItems(req, res, next) {
     let limit = 12;
     let combinedDietCuisineFilters = req.query["combinedDietCuisineFilters"];
     let filterspageNum = req.query["filterspageNum"] *12;
-    console.log(combinedDietCuisineFilters,filterspageNum);
     FoodItem
         .find(combinedDietCuisineFilters, 'name placeOrderBy serviceDate deliveryFlag pickUpStartTime pickUpEndTime _creator')
         .populate('_creator', 'name img pickUpFlag doYouDeliverFlag')

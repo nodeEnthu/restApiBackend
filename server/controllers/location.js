@@ -3,34 +3,13 @@ import Zipcode from '../models/zipcode'
 import User from '../models/user';
 import request from 'request'
 import config from '../../config/env/index'
+import {getLatAndLong} from '../helpers/geo'
 
 /**
  * Load
  */
 
-function getLatAndLong(place_id, cb) {
-    request({
-        method: 'get',
-        uri: 'https://maps.googleapis.com/maps/api/geocode/json',
-        qs: {
-            place_id: place_id,
-            key: config.GOOGLE_GEOCODING
-        }
-    }, function(error, response, body) {
-        if (error) {
-            return cb(error);
-        } else {
-            let resolvedResponse = JSON.parse(body);
-            // take the first google recommendation .. i trust you google dont fuck up
-            let bestAddress = resolvedResponse.results[0];
-            return cb(null, {
-                latitude: bestAddress.geometry.location.lat,
-                longitude: bestAddress.geometry.location.lng,
-                place_id: place_id
-            })
-        }
-    })
-}
+
 
 function zipcodeTypeAssist(req, res, next) {
     var regexp = new RegExp("^" + req.query.search, "i");
