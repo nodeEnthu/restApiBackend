@@ -6,11 +6,12 @@ import app from '../../index';
 import config from '../../config/env';
 import async from 'async';
 import faker from 'faker';
+import generatePlaceIds from './utils/geo/generateRandomLocs'
 
 chai.config.includeStack = true;
 let tokenArr = [];
 
-// before running any tests create a user
+// before running any tests initialize a user
 let user = {
     name: 'joomla',
     email: faker.internet.email(),
@@ -54,6 +55,13 @@ let foodItem1 = {
     vegetarian: true
 };
 describe('# POST /api/users/signUp && /api/providers/registration', () => {
+    before(function(done) {
+        generatePlaceIds({ lat: 40.714224, lng: -73.961452 }, 16000, 1, function(err, results) {
+            user.place_id = results[0].place_id;
+            user.searchText = results[0].address;
+            done();
+        })
+    })
     it('should create a new user AND enroll provider with a basic information', (done) => {
         async.series([
             function(callback) {

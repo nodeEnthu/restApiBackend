@@ -3,7 +3,7 @@ import Zipcode from '../models/zipcode'
 import User from '../models/user';
 import request from 'request'
 import config from '../../config/env/index'
-import {getLatAndLong} from '../helpers/geo'
+import { getLatAndLong,saveLocation } from '../helpers/geo'
 
 /**
  * Load
@@ -80,27 +80,7 @@ function registerMostRecentSearchLocation(req, res, next) {
                 if (err) {
                     res.json({ error: err });
                 } else {
-                    user.loc = {
-                        "type": "Point",
-                        "coordinates": [result.longitude, result.latitude],
-                        place_id: place_id,
-                        searchText: address
-                    };
-                    // check whether the location already exists in userSeachLocations with place_id
-                    let saveLoc = true;
-                    for (var i = 0; i < user.userSeachLocations.length; i++) {
-                        if (user.userSeachLocations[i].place_id === place_id) {
-                            saveLoc = false;
-                            break;
-                        }
-                    }
-                    if (saveLoc) {
-                        user.userSeachLocations.push({
-                            "coordinates": [result.longitude, result.latitude],
-                            place_id: place_id,
-                            searchText: address
-                        })
-                    }
+                    user = saveLocation(user,result,place_id,address);
                     user.save(function(err, savedUser) {
                         res.json(savedUser);
                     })

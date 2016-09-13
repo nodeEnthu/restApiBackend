@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import app from '../../index';
 import config from '../../config/env'
 import faker from 'faker';
-
+import generatePlaceIds from './utils/geo/generateRandomLocs'
 
 chai.config.includeStack = true;
 const baseUrl = config.baseUrl;
@@ -52,6 +52,13 @@ describe('## Provider APIs', () => {
         });
     });
     describe('# POST /api/providers/registration', () => {
+        before(function(done){
+            generatePlaceIds({lat:40.714224,lng:-73.961452},16000,1,function(err,results){
+                user.place_id = results[0].place_id;
+                user.searchText = results[0].address;
+                done();
+            })
+        })
         it('should register the user as a provider and enter profile information', (done) => {
             let token;
             for(let i=0;i<tokenArr.length;i++){

@@ -22,12 +22,12 @@ export default function ensureAuthenticated(req, res, next) {
 }
 
 /*
-* this middleware is used only in cases when we want to know 
-* user is logged on for an api call which is insecure
-*/
+ * this middleware is used only in cases when we want to know 
+ * user is logged on for an api call which is insecure
+ */
 export function checkLogin(req, res, next) {
     // it should be a get call 
-    let token = req.query.token;
+    let token = (req.header('Authorization')) ? req.header('Authorization').split(' ')[1] : undefined;
     let payload;
     try {
         payload = jwt.decode(token, config.TOKEN_SECRET);

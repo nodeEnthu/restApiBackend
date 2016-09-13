@@ -12,17 +12,29 @@ const UserSchema = new mongoose.Schema({
     img: { type: String, default: '' },
     fbUserID: { type: String, default: '' },
     gmailUserID: { type: String, default: '' },
-    userType: { type: String, default: 'consumer' },
+    userType: { type: String, default: 'consumer' },    
     foodItems: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoodItem'
     }],
-    loc: { // this is the most recent user enetred location for searching foodItems
+    /*
+    * loc will be used to perform geo spatial queries and no other purpose
+    *
+    * location denotes the most recent location of a provider/consumer
+    * for provider: It means their business location that will be used to perform geolocation queries against
+    * for consumers: It means the most recent address they have entered for delivery
+    */
+    loc: {
         type: { type: String, default: 'Point' },
-        coordinates: { type: [Number], default: [0, 0] },
-        place_id: { type: String },
-        searchText: { type: String },
+        coordinates: { type: [Number], default: [0, 0] }
     },
+    /*
+    * the index in userSeachLocations .. which will be the delivery address
+    */
+    deliveryAddressIndex:{type:Number,default:0},
+    /*
+    * Used as a list of addreses entered by the user
+    */
     userSeachLocations: [{
         searchText: { type: String },
         coordinates: { type: [Number], default: [0, 0] },

@@ -11,10 +11,4 @@ router.route('/addOrEditFoodItem')
     // Post /api/providers/addOrEditFoodItem
     .post(ensureAuthenticated, providerCtrl.addOrEditFoodItem);
 
-
-if (config.env === 'test') {
-    router.route('/test/registration')
-        // POST /api/providers/test/registration
-        .post(ensureAuthenticated, providerCtrl.testRegisteration);
-}
 export default router;

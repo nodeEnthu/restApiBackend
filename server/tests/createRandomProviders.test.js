@@ -7,28 +7,31 @@ import config from '../../config/env';
 import async from 'async';
 import fs from 'fs';
 import faker from 'faker';
-import generateRandomPoints from 'utils/geo/generateRandomLocs'
+import generatePlaceIds from './utils/geo/generateRandomLocs'
 
 
 faker.locale = "en_US";
 chai.config.includeStack = true;
-let tokenArr = [];
-let n = 4 // number of providers
-let userSignUpFuncArr = [];
-let users = [];
+
 let providerRegistrationFuncArr = [];
 let providerFoodItemEntryFuncArr = [];
-let randomGeoPoints = generateRandomPoints({'lat':37.774248, 'lng':-121.990731}, 16000, n);
-let registerALocationForProviderFuncArr = [];
-Date.prototype.yyyymmdd = function() {
-  var mm = this.getMonth() + 1; // getMonth() is zero-based
-  var dd = this.getDate();
+let userSignUpFuncArr = [];
 
-  return [this.getFullYear(), !mm[1] && '0', mm, !dd[1] && '0', dd].join('-'); // padding
+let n = 100 // number of providers
+let users = [];
+let addresses = [];
+let tokenArr = [];
+
+Date.prototype.yyyymmdd = function() {
+    var mm = this.getMonth() + 1; // getMonth() is zero-based
+    var dd = this.getDate();
+
+    return [this.getFullYear(), !mm[1] && '0', mm, !dd[1] && '0', dd].join('-'); // padding
 };
 let today = new Date();
 let date = new Date();
 let twoDaysAhead = date.setDate(date.getDate() + 2);
+
 
 function userSignUpFunc(index) {
     return function(callback) {
@@ -73,6 +76,8 @@ function providerRegistrationFunc(index) {
         user.deliveryAddtnlComments = faker.lorem.sentence();
         user.deliveryMinOrder = faker.random.number({ min: 35, max: 50 });
         user.deliveryRadius = faker.random.number({ min: 5, max: 20 });
+        user.place_id = addresses[index].place_id;
+        user.searchText = addresses[index].address;
         let token = tokenArr[index].token;
         request(app)
             .post('/api/providers/registration')
@@ -119,11 +124,7 @@ function providerFoodItemEntryFunc(index) {
             })
     }
 }
-function registerALocationForProviderFunc(index){
-    return function(cb){
-        cb();
-    }
-}
+
 describe("# Creating random providers for the search view", function() {
     // this is not a test but creating data for the search view
 
@@ -131,7 +132,6 @@ describe("# Creating random providers for the search view", function() {
     for (var i = 0; i < n; i++) {
         userSignUpFuncArr.push(userSignUpFunc(i));
         providerRegistrationFuncArr.push(providerRegistrationFunc(i));
-        registerALocationForProviderFuncArr.push(registerALocationForProviderFunc(i));
         providerFoodItemEntryFuncArr.push(providerFoodItemEntryFunc(i));
     }
     async.series(
@@ -142,12 +142,13 @@ describe("# Creating random providers for the search view", function() {
                 })
             },
             function(cb) {
-                async.parallel(providerRegistrationFuncArr, function(err, results) {
+                generatePlaceIds({ lat: 40.714224, lng: -73.961452 }, 1, parseInt(n / 3), function(err, results) {
+                    addresses = addresses.concat(results);
                     cb();
                 })
             },
-            function(cb){
-                async.parallel(registerALocationForProviderFuncArr, function(err, results) {
+            function(cb) {
+                async.parallel(providerRegistrationFuncArr, function(err, results) {
                     cb();
                 })
             },
