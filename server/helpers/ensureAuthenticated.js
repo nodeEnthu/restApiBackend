@@ -16,9 +16,11 @@ export default function ensureAuthenticated(req, res, next) {
 
     if (payload.exp <= moment().unix()) {
         return res.status(401).send({ message: 'Token has expired' });
+    } else {
+        req.user = payload.sub;
+        next();
     }
-    req.user = payload.sub;
-    next();
+
 }
 
 /*
@@ -26,17 +28,20 @@ export default function ensureAuthenticated(req, res, next) {
  * user is logged on for an api call which is insecure
  */
 export function checkLogin(req, res, next) {
-    // it should be a get call 
     let token = (req.header('Authorization')) ? req.header('Authorization').split(' ')[1] : undefined;
     let payload;
-    try {
+    console.log('token',token);
+    if (token) {
         payload = jwt.decode(token, config.TOKEN_SECRET);
-    } catch (err) {
+        if (payload.exp <= moment().unix()) {
+            next();
+        } else {
+            req.user = payload.sub;
+            next();
+        }
+    } else {
         next();
     }
-    if (payload.exp <= moment().unix()) {
-        next();
-    }
-    req.user = payload.sub;
-    next();
+
+
 }

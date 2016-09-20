@@ -1,6 +1,7 @@
 import User from '../models/user';
 import FoodItem from '../models/foodItem';
 import moment from 'moment';
+import async from 'async';
 
 /*
  * GET /api/query/foodItems
@@ -21,15 +22,57 @@ function foodItems(req, res, next) {
 }
 
 function providers(req, res, next) {
-    const {latitude,longitude} = req.query;
-    var point = { type: "Point", coordinates: [longitude, latitude]};
-    User.geoNear(
-        point, {
-            spherical: true
-        },
-        function(err, results, stats) {
-            res.json(results);
-        });
+
+    let { combinedDietCuisineFilters } = req.query;
+    combinedDietCuisineFilters = (combinedDietCuisineFilters) ? JSON.parse(combinedDietCuisineFilters) : undefined;
+    let foodQuery = {};
+    for (let key in combinedDietCuisineFilters) {
+        if (combinedDietCuisineFilters.hasOwnProperty(key)) {
+            foodQuery['foodItems.' + key] = combinedDietCuisineFilters[key];
+        }
+    }
+    let userId = req.user;
+    User.findById(userId, function(err, user) {
+        const latitude = 40.714224;
+        const longitude = -73.96145;
+        console.log(latitude, longitude);
+        User.aggregate(
+            [{
+                "$geoNear": {
+                    "near": {
+                        "type": "Point",
+                        "coordinates": [parseFloat(longitude), parseFloat(latitude)]
+                    },
+                    "distanceField": "distance",
+                    "maxDistance": 16000,
+                    "spherical": true,
+                    "query": { "loc.type": "Point" }
+                }
+            }, {
+                $unwind: '$foodItems'
+            }, {
+                $lookup: {
+                    from: "foodItems",
+                    localField: "foodItems",
+                    foreignField: "_id",
+                    as: "foodItems"
+
+                }
+            }, {
+                $match: { 'foodItems.organic': true }
+            }, {
+                $project: {
+                    distance: 1,
+                    'foodItems': 1
+                }
+            }, {
+                "$sort": { "distance": 1 }
+            }],
+            function(err, results, stats) {
+                res.json(results);
+            });
+    })
+
 }
 
 export default { foodItems, providers };
