@@ -22,7 +22,6 @@ function foodItems(req, res, next) {
 }
 
 function providers(req, res, next) {
-
     let { combinedDietCuisineFilters } = req.query;
     combinedDietCuisineFilters = (combinedDietCuisineFilters) ? JSON.parse(combinedDietCuisineFilters) : undefined;
     let foodQuery = {};
@@ -32,10 +31,50 @@ function providers(req, res, next) {
         }
     }
     let userId = req.user;
-    User.findById(userId, function(err, user) {
-        const latitude = 40.714224;
-        const longitude = -73.96145;
-        console.log(latitude, longitude);
+    if (userId) {
+        User.findById(userId, function(err, user) {
+            console.log(user, userId);
+            const latitude = user.loc.coordinates[1];
+            const longitude = user.loc.coordinates[0];
+            console.log(latitude, longitude);
+            User.aggregate(
+                [{
+                    "$geoNear": {
+                        "near": {
+                            "type": "Point",
+                            "coordinates": [parseFloat(longitude), parseFloat(latitude)]
+                        },
+                        "distanceField": "distance",
+                        "maxDistance": 16000000,
+                        "spherical": true,
+                        "query": { "loc.type": "Point" }
+                    }
+                }, {
+                    $unwind: '$foodItems'
+                }, {
+                    $lookup: {
+                        from: "foodItems",
+                        localField: "foodItems",
+                        foreignField: "_id",
+                        as: "foodItems"
+
+                    }
+                }, {
+                    $match: { 'foodItems.organic': true }
+                }, {
+                    $project: {
+                        distance: 1,
+                        'foodItems': 1
+                    }
+                }, {
+                    "$sort": { "distance": 1 }
+                }],
+                function(err, results, stats) {
+                    res.json(results);
+                });
+        })
+    } else {
+        const {latitude,longitude} = req.query;
         User.aggregate(
             [{
                 "$geoNear": {
@@ -44,7 +83,7 @@ function providers(req, res, next) {
                         "coordinates": [parseFloat(longitude), parseFloat(latitude)]
                     },
                     "distanceField": "distance",
-                    "maxDistance": 16000,
+                    "maxDistance": 16000000,
                     "spherical": true,
                     "query": { "loc.type": "Point" }
                 }
@@ -71,7 +110,8 @@ function providers(req, res, next) {
             function(err, results, stats) {
                 res.json(results);
             });
-    })
+    }
+
 
 }
 
