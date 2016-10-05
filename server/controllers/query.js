@@ -34,7 +34,7 @@ function providers(req, res, next) {
         }
     }
     // cuisineSelectedMap is all OR
-    if(cuisineSelectedMap){
+    if(cuisineSelectedMap && Object.keys(cuisineSelectedMap).length > 0){
         let orConditions = [];
         for (let key in cuisineSelectedMap) {
             if (cuisineSelectedMap.hasOwnProperty(key)) {
