@@ -46,8 +46,17 @@ function providers(req, res, next) {
     let userId = req.user;
     if (userId) {
         User.findById(userId, function(err, user) {
-            const latitude = user.loc.coordinates[1];
-            const longitude = user.loc.coordinates[0];
+            let latitude,longitude;
+            if(user.type === 'consumer'){
+                latitude = user.loc.coordinates[1];
+                longitude = user.loc.coordinates[0];
+            } else{
+                // its a provider trying to look for food
+                latitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[1];
+                longitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[0];
+            }
+            
+            console.log(latitude,longitude);
             User.aggregate(
                 [{
                     "$geoNear": {
@@ -75,8 +84,7 @@ function providers(req, res, next) {
                     $project: {
                         distance: 1,
                         loc:1,
-                        'foodItems': 1,
-                        cuisineType:1
+                        'foodItems': 1
                     }
                 }, {
                     "$sort": { "distance": 1 }
