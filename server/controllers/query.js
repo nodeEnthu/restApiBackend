@@ -22,28 +22,40 @@ function foodItems(req, res, next) {
 }
 
 function providers(req, res, next) {
-    let { combinedDietCuisineFilters,addtnlQuery} = req.query;
-    let defaultProviderRadius = 15000;
-    combinedDietCuisineFilters = (combinedDietCuisineFilters) ? JSON.parse(combinedDietCuisineFilters) : undefined;
+    let { cuisineSelectedMap,dietSelectedMap,addtnlQuery} = req.query;
+    let defaultProviderRadius = 16000; // 10 miles
+    cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
+    dietSelectedMap = (dietSelectedMap) ? JSON.parse(dietSelectedMap) : undefined;
     let foodQuery = {};
-    for (let key in combinedDietCuisineFilters) {
-        if (combinedDietCuisineFilters.hasOwnProperty(key)) {
-            foodQuery['foodItems.' + key] = combinedDietCuisineFilters[key];
+    // dietSelectedMap is all AND
+    for (let key in dietSelectedMap) {
+        if (dietSelectedMap.hasOwnProperty(key)) {
+            foodQuery['foodItems.' + key] = dietSelectedMap[key];
         }
     }
+    // cuisineSelectedMap is all OR
+    if(cuisineSelectedMap){
+        let orConditions = [];
+        for (let key in cuisineSelectedMap) {
+            if (cuisineSelectedMap.hasOwnProperty(key)) {
+                orConditions.push({['foodItems.cuisineType']:key}) 
+            }
+        }
+        foodQuery["$or"]=orConditions;
+    } 
     if(addtnlQuery){
         addtnlQuery = JSON.parse(addtnlQuery);
-        console.log('addtnlQuery.date',addtnlQuery.date,addtnlQuery.orderMode,addtnlQuery.providerRadius);
         foodQuery['foodItems.serviceDate']= { $gte : new Date(addtnlQuery.date) }
         // if(addtnlQuery.orderMode){
         //     foodQuery['foodItems.' + addtnlQuery.orderMode] = true;
         // }
         if(addtnlQuery.providerRadius){
-            defaultProviderRadius = addtnlQuery.providerRadius *1000;
+            defaultProviderRadius = addtnlQuery.providerRadius *1600;
         }
 
     }
     let userId = req.user;
+    console.log(foodQuery);
     if (userId) {
         User.findById(userId, function(err, user) {
             let latitude,longitude;
@@ -55,8 +67,6 @@ function providers(req, res, next) {
                 latitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[1];
                 longitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[0];
             }
-            
-            console.log(latitude,longitude);
             User.aggregate(
                 [{
                     "$geoNear": {
@@ -130,8 +140,6 @@ function providers(req, res, next) {
                 res.json(results);
             });
     }
-
-
 }
 
 export default { foodItems, providers };

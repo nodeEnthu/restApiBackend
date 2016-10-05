@@ -18,15 +18,15 @@ var FoodItem_Schema = new mongoose.Schema({
     pickUpStartTime:{ type: Date},
     pickUpEndTime:{ type: Date},
     cuisineType:String,
-    organic:{type:Boolean, default:false},
-    vegetarian:{type:Boolean, default:false},
-    glutenfree:{type:Boolean, default:false},
-    lowcarb:{type:Boolean, default:false},
-    vegan:{type:Boolean, default:false},
-    nutfree:{type:Boolean, default:false},
-    oilfree:{type:Boolean, default:false},
-    nondairy:{type:Boolean, default:false},
-    indianFasting:{type:Boolean, default:false}
+    organic:Boolean,
+    vegetarian:Boolean,
+    glutenfree:Boolean,
+    lowcarb:Boolean,
+    vegan:Boolean,
+    nutfree:Boolean,
+    oilfree:Boolean,
+    nondairy:Boolean,
+    indianFasting:Boolean
 }, { collection: 'foodItems' });
 
 export default mongoose.model('FoodItem', FoodItem_Schema);
