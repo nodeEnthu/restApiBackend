@@ -21,7 +21,7 @@ let n = 100 // number of providers
 let users = [];
 let addresses = [];
 let tokenArr = [];
-
+let foodItemArr = ["Chinese","American","African","Caribbean","Japanese","Indian","Italian","Mediterrnean","Korean","Mexican","Viatnamese"]
 Date.prototype.yyyymmdd = function() {
     var mm = this.getMonth() + 1; // getMonth() is zero-based
     var dd = this.getDate();
@@ -92,14 +92,16 @@ function providerRegistrationFunc(index) {
 }
 
 function providerFoodItemEntryFunc(index) {
+    var randomNumber = Math.floor(Math.random()*foodItemArr.length);
     return function(callback) {
         let foodItem = {
             deliveryFlag: faker.random.boolean(),
-            description: faker.lorem.sentence(),
+            description: faker.lorem.paragraph(),
             glutenfree: faker.random.boolean(),
             indianFasting: faker.random.boolean(),
             lowcarb: faker.random.boolean(),
-            name: "Gassy beans",
+            name: faker.random.words,
+            cuisineType:foodItemArr[randomNumber],
             nondairy: faker.random.boolean(),
             nutfree: faker.random.boolean(),
             oilfree: faker.random.boolean(),
@@ -142,7 +144,8 @@ describe("# Creating random providers for the search view", function() {
                 })
             },
             function(cb) {
-                generatePlaceIds({ lat: 40.714224, lng: -73.961452 }, 1, parseInt(n / 3), function(err, results) {
+                // 50 kms
+                generatePlaceIds({ lat: 37.7670730, lng: -121.9866690 }, 50000, parseInt(n / 3), function(err, results) {
                     addresses = addresses.concat(results);
                     cb();
                 })

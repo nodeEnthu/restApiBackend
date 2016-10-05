@@ -17,6 +17,7 @@ var FoodItem_Schema = new mongoose.Schema({
     pickUpFlag:Boolean,
     pickUpStartTime:{ type: Date},
     pickUpEndTime:{ type: Date},
+    cuisineType:String,
     organic:{type:Boolean, default:false},
     vegetarian:{type:Boolean, default:false},
     glutenfree:{type:Boolean, default:false},

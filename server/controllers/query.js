@@ -22,7 +22,8 @@ function foodItems(req, res, next) {
 }
 
 function providers(req, res, next) {
-    let { combinedDietCuisineFilters } = req.query;
+    let { combinedDietCuisineFilters,addtnlQuery} = req.query;
+    let defaultProviderRadius = 15000;
     combinedDietCuisineFilters = (combinedDietCuisineFilters) ? JSON.parse(combinedDietCuisineFilters) : undefined;
     let foodQuery = {};
     for (let key in combinedDietCuisineFilters) {
@@ -30,13 +31,23 @@ function providers(req, res, next) {
             foodQuery['foodItems.' + key] = combinedDietCuisineFilters[key];
         }
     }
+    if(addtnlQuery){
+        addtnlQuery = JSON.parse(addtnlQuery);
+        console.log('addtnlQuery.date',addtnlQuery.date,addtnlQuery.orderMode,addtnlQuery.providerRadius);
+        foodQuery['foodItems.serviceDate']= { $gte : new Date(addtnlQuery.date) }
+        // if(addtnlQuery.orderMode){
+        //     foodQuery['foodItems.' + addtnlQuery.orderMode] = true;
+        // }
+        if(addtnlQuery.providerRadius){
+            defaultProviderRadius = addtnlQuery.providerRadius *1000;
+        }
+
+    }
     let userId = req.user;
     if (userId) {
         User.findById(userId, function(err, user) {
-            console.log(user, userId);
             const latitude = user.loc.coordinates[1];
             const longitude = user.loc.coordinates[0];
-            console.log(latitude, longitude);
             User.aggregate(
                 [{
                     "$geoNear": {
@@ -45,7 +56,7 @@ function providers(req, res, next) {
                             "coordinates": [parseFloat(longitude), parseFloat(latitude)]
                         },
                         "distanceField": "distance",
-                        "maxDistance": 16000000,
+                        "maxDistance": defaultProviderRadius,
                         "spherical": true,
                         "query": { "loc.type": "Point" }
                     }
@@ -57,14 +68,15 @@ function providers(req, res, next) {
                         localField: "foodItems",
                         foreignField: "_id",
                         as: "foodItems"
-
                     }
                 }, {
-                    $match: { 'foodItems.organic': true }
+                    $match: foodQuery 
                 }, {
                     $project: {
                         distance: 1,
-                        'foodItems': 1
+                        loc:1,
+                        'foodItems': 1,
+                        cuisineType:1
                     }
                 }, {
                     "$sort": { "distance": 1 }
@@ -83,7 +95,7 @@ function providers(req, res, next) {
                         "coordinates": [parseFloat(longitude), parseFloat(latitude)]
                     },
                     "distanceField": "distance",
-                    "maxDistance": 16000000,
+                    "maxDistance": defaultProviderRadius,
                     "spherical": true,
                     "query": { "loc.type": "Point" }
                 }
@@ -95,10 +107,9 @@ function providers(req, res, next) {
                     localField: "foodItems",
                     foreignField: "_id",
                     as: "foodItems"
-
                 }
             }, {
-                $match: { 'foodItems.organic': true }
+                $match:  foodQuery 
             }, {
                 $project: {
                     distance: 1,

@@ -18,7 +18,7 @@ describe('## User APIs', () => {
         fbUserID: 'randomUserId'
     };
     describe('# POST /api/users/signUp', () => {
-        it('should create a new user', (done) => {
+        it('should create a new user', (done) => { 
             request(app)
                 .post('/api/users/signUp')
                 .send(user)
