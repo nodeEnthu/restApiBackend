@@ -48,7 +48,7 @@ function create(req, res, next) {
     User.findOne({
         email: req.body.email
     }, function(err, result) {
-        if (result && result.length > 0) {
+        if (result) {
             let alreadyPresentUser = result;
             let token = createJWT(alreadyPresentUser);
                 res.send({ 

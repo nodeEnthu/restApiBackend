@@ -46,9 +46,9 @@ function providers(req, res, next) {
     if(addtnlQuery){
         addtnlQuery = JSON.parse(addtnlQuery);
         foodQuery['foodItems.serviceDate']= { $gte : new Date(addtnlQuery.date) }
-        // if(addtnlQuery.orderMode){
-        //     foodQuery['foodItems.' + addtnlQuery.orderMode] = true;
-        // }
+        if(addtnlQuery.orderMode){
+            foodQuery['foodItems.' + addtnlQuery.orderMode] = true;
+        }
         if(addtnlQuery.providerRadius){
             defaultProviderRadius = addtnlQuery.providerRadius *1600;
         }

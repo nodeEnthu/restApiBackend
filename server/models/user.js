@@ -12,7 +12,8 @@ const UserSchema = new mongoose.Schema({
     img: { type: String, default: '' },
     fbUserID: { type: String, default: '' },
     gmailUserID: { type: String, default: '' },
-    userType: { type: String, default: 'consumer' },    
+    userType: { type: String, default: 'consumer' },
+    homepageUrl:String,    
     foodItems: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoodItem'
