@@ -89,7 +89,8 @@
     "run-sequence": "^1.1.5",
     "supertest": "^1.1.0",
     "supertest-as-promised": "^2.0.2",
-    "validate-commit-msg": "2.0.0"
+    "validate-commit-msg": "2.0.0",
+    "faker":"latest"
   },
   "license": "MIT",
   "config": {},

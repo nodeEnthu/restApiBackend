@@ -23,7 +23,7 @@ function foodItems(req, res, next) {
 
 function providers(req, res, next) {
     let { cuisineSelectedMap,dietSelectedMap,addtnlQuery} = req.query;
-    let defaultProviderRadius = 16000; // 10 miles
+    let defaultProviderRadius = 1600; // 10 miles
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
     dietSelectedMap = (dietSelectedMap) ? JSON.parse(dietSelectedMap) : undefined;
     let foodQuery = {};
