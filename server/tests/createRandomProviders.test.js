@@ -98,6 +98,7 @@ function providerFoodItemEntryFunc(index) {
             deliveryFlag: faker.random.boolean(),
             description: faker.lorem.paragraph(),
             glutenfree: faker.random.boolean(),
+            price:faker.random.number({min:8, max:25}),
             indianFasting: faker.random.boolean(),
             lowcarb: faker.random.boolean(),
             name: faker.random.words,

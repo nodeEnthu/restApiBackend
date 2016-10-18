@@ -54,6 +54,7 @@ function addOrEditFoodItem(req, res, next) {
                 const foodItem = new FoodItem({
                     name: userResponse.name,
                     description: userResponse.description,
+                    price:userResponse.price,
                     cuisineType:userResponse.cuisineType,
                     _creator: user._id,
                     placeOrderBy: userResponse.placeOrderBy,

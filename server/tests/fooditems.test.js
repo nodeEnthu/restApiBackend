@@ -35,6 +35,7 @@ let user = {
 };
 let foodItem1 = {
     deliveryFlag: true,
+    price:10,
     description: "These will make u gassy",
     firstItem: true,
     glutenfree: true,
