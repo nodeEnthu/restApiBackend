@@ -66,7 +66,7 @@ function providerRegistrationFunc(index) {
         user.title = faker.company.companyName();
         user.keepAddressPrivateFlag = faker.random.boolean();
         user.includeAddressInEmail = faker.random.boolean();
-        user.description = faker.lorem.sentence();
+        user.description = faker.lorem.paragraph();
         user.streetName = faker.address.streetAddress("###");
         user.crosStreetName = faker.address.secondaryAddress();
         user.city = faker.address.city();
@@ -101,7 +101,7 @@ function providerFoodItemEntryFunc(index) {
             price:faker.random.number({min:8, max:25}),
             indianFasting: faker.random.boolean(),
             lowcarb: faker.random.boolean(),
-            name: faker.random.words,
+            name: faker.random.words(),
             cuisineType:foodItemArr[randomNumber],
             nondairy: faker.random.boolean(),
             nutfree: faker.random.boolean(),
