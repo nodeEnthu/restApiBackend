@@ -55,6 +55,7 @@
     "nock": "^8.0.0",
     "path": "^0.12.7",
     "request": "^2.74.0",
+    "shortid": "^2.2.6",
     "socket.io": "^1.4.8",
     "winston": "^2.1.1"
   },
@@ -90,7 +91,7 @@
     "supertest": "^1.1.0",
     "supertest-as-promised": "^2.0.2",
     "validate-commit-msg": "2.0.0",
-    "faker":"latest"
+    "faker": "latest"
   },
   "license": "MIT",
   "config": {},
