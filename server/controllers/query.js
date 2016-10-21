@@ -23,7 +23,7 @@ function foodItems(req, res, next) {
 
 function providers(req, res, next) {
     let { cuisineSelectedMap,dietSelectedMap,addtnlQuery} = req.query;
-    let defaultProviderRadius = 1600; // 10 miles
+    let defaultProviderRadius = 24000; // 10 miles
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
     dietSelectedMap = (dietSelectedMap) ? JSON.parse(dietSelectedMap) : undefined;
     let foodQuery = {};
@@ -50,23 +50,25 @@ function providers(req, res, next) {
             foodQuery['foodItems.' + addtnlQuery.orderMode] = true;
         }
         if(addtnlQuery.providerRadius){
-            defaultProviderRadius = addtnlQuery.providerRadius *1600;
+            defaultProviderRadius = (addtnlQuery.providerRadius)? addtnlQuery.providerRadius *1600 : defaultProviderRadius;
         }
 
     }
+
     let userId = req.user;
-    console.log(foodQuery);
     if (userId) {
         User.findById(userId, function(err, user) {
             let latitude,longitude;
             if(user.type === 'consumer'){
                 latitude = user.loc.coordinates[1];
                 longitude = user.loc.coordinates[0];
+
             } else{
                 // its a provider trying to look for food
                 latitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[1];
                 longitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[0];
             }
+            console.log('*** getting hete  ',foodQuery,addtnlQuery,latitude,longitude,defaultProviderRadius);
             User.aggregate(
                 [{
                     "$geoNear": {
@@ -126,8 +128,6 @@ function providers(req, res, next) {
                     foreignField: "_id",
                     as: "foodItems"
                 }
-            }, {
-                $match:  foodQuery 
             }, {
                 $project: {
                     distance: 1,
