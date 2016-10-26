@@ -3,6 +3,7 @@ import userRoutes from './user';
 import providerRoutes from './provider';
 import locationRoutes from './location';
 import queryRoutes from './query';
+import emailRoutes from './send-email';
 const router = express.Router();	// eslint-disable-line new-cap
 
 /** GET /health-check - Check service health */
@@ -17,6 +18,7 @@ router.use('/providers', providerRoutes);
 
 router.use('/locations',locationRoutes);
 router.use('/query',queryRoutes);
+router.use('/emails',emailRoutes);
 
 
 export default router;
