@@ -4,7 +4,7 @@ import ensureAuthenticated, {checkLogin} from '../helpers/ensureAuthenticated';
 const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/order-submit')
-	// GET /api/emails/order-submit
-	.get(sendEmail.orderSubmit);
+	// POST /api/emails/order-submit
+	.post(sendEmail.orderSubmit);
 
 export default router; 

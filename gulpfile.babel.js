@@ -8,9 +8,9 @@ import * as isparta from 'isparta';
 
 const plugins = gulpLoadPlugins();
 
-const paths = {
+const paths = { 
 	js: ['./**/*.js', '!dist/**', '!node_modules/**', '!coverage/**'],
-	nonJs: ['./package.json', './.gitignore'],
+	nonJs: ['./package.json', './.gitignore','./server/templates/**/*.ejs'], 
 	tests: './server/tests/*.js'
 };
 
@@ -131,10 +131,10 @@ gulp.task('test', ['pre-test', 'set-env'], () => {
 		// .pipe(plugins.istanbul.enforceThresholds({
 		// 	thresholds: options.codeCoverage.thresholds
 		// }))
-		// .once('end', () => {
+		// .once('end', () => { 
 		// 	plugins.util.log('completed !!');
 		// 	process.exit(exitCode);
-		// });
+		// }); 
 });
 
 // clean dist, compile js files, copy non-js files and execute tests
