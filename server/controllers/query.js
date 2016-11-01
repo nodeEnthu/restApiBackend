@@ -2,7 +2,46 @@ import User from '../models/user';
 import FoodItem from '../models/foodItem';
 import moment from 'moment';
 import async from 'async';
+import { getLatAndLong } from '../helpers/geo'
 
+function combinedQuery(latitude, longitude, defaultProviderRadius, query, cb) {
+    console.log(latitude, longitude, defaultProviderRadius, query, cb);
+    User.aggregate(
+        [{
+            "$geoNear": {
+                "near": {
+                    "type": "Point",
+                    "coordinates": [parseFloat(longitude), parseFloat(latitude)]
+                },
+                "distanceField": "distance",
+                "maxDistance": defaultProviderRadius,
+                "spherical": true,
+                "query": { "loc.type": "Point" }
+            }
+        }, {
+            $unwind: '$foodItems'
+        }, {
+            $lookup: {
+                from: "foodItems",
+                localField: "foodItems",
+                foreignField: "_id",
+                as: "foodItems"
+            }
+        }, {
+            $match: query
+        }, {
+            $project: {
+                distance: 1,
+                loc: 1,
+                'foodItems': 1
+            }
+        }, {
+            "$sort": { "distance": 1 }
+        }],
+        function(err, results, stats) {
+            cb(err, results, stats);
+        });
+}
 /*
  * GET /api/query/foodItems
  */
@@ -22,7 +61,7 @@ function foodItems(req, res, next) {
 }
 
 function providers(req, res, next) {
-    let { cuisineSelectedMap,dietSelectedMap,addtnlQuery} = req.query;
+    let { cuisineSelectedMap, dietSelectedMap, addtnlQuery } = req.query;
     let defaultProviderRadius = 24000; // 10 miles
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
     dietSelectedMap = (dietSelectedMap) ? JSON.parse(dietSelectedMap) : undefined;
@@ -34,23 +73,25 @@ function providers(req, res, next) {
         }
     }
     // cuisineSelectedMap is all OR
-    if(cuisineSelectedMap && Object.keys(cuisineSelectedMap).length > 0){
+    if (cuisineSelectedMap && Object.keys(cuisineSelectedMap).length > 0) {
         let orConditions = [];
         for (let key in cuisineSelectedMap) {
             if (cuisineSelectedMap.hasOwnProperty(key)) {
-                orConditions.push({['foodItems.cuisineType']:key}) 
+                orConditions.push({
+                    ['foodItems.cuisineType']: key
+                })
             }
         }
-        foodQuery["$or"]=orConditions;
-    } 
-    if(addtnlQuery){
+        foodQuery["$or"] = orConditions;
+    }
+    if (addtnlQuery) {
         addtnlQuery = JSON.parse(addtnlQuery);
-        foodQuery['foodItems.serviceDate']= { $gte : new Date(addtnlQuery.date) }
-        if(addtnlQuery.orderMode){
+        foodQuery['foodItems.serviceDate'] = { $gte: new Date(addtnlQuery.date) }
+        if (addtnlQuery.orderMode) {
             foodQuery['foodItems.' + addtnlQuery.orderMode] = true;
         }
-        if(addtnlQuery.providerRadius){
-            defaultProviderRadius = (addtnlQuery.providerRadius)? addtnlQuery.providerRadius *1600 : defaultProviderRadius;
+        if (addtnlQuery.providerRadius) {
+            defaultProviderRadius = (addtnlQuery.providerRadius) ? addtnlQuery.providerRadius * 1600 : defaultProviderRadius;
         }
 
     }
@@ -58,87 +99,29 @@ function providers(req, res, next) {
     let userId = req.user;
     if (userId) {
         User.findById(userId, function(err, user) {
-            let latitude,longitude;
-            if(user.type === 'consumer'){
+            let latitude, longitude;
+            if (user.type === 'consumer') {
                 latitude = user.loc.coordinates[1];
                 longitude = user.loc.coordinates[0];
 
-            } else{
+            } else {
                 // its a provider trying to look for food
                 latitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[1];
                 longitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[0];
             }
-            console.log('*** getting hete  ',foodQuery,addtnlQuery,latitude,longitude,defaultProviderRadius);
-            User.aggregate(
-                [{
-                    "$geoNear": {
-                        "near": {
-                            "type": "Point",
-                            "coordinates": [parseFloat(longitude), parseFloat(latitude)]
-                        },
-                        "distanceField": "distance",
-                        "maxDistance": defaultProviderRadius,
-                        "spherical": true,
-                        "query": { "loc.type": "Point" }
-                    }
-                }, {
-                    $unwind: '$foodItems'
-                }, {
-                    $lookup: {
-                        from: "foodItems",
-                        localField: "foodItems",
-                        foreignField: "_id",
-                        as: "foodItems"
-                    }
-                }, {
-                    $match: foodQuery 
-                }, {
-                    $project: {
-                        distance: 1,
-                        loc:1,
-                        'foodItems': 1
-                    }
-                }, {
-                    "$sort": { "distance": 1 }
-                }],
-                function(err, results, stats) {
-                    res.json(results);
-                });
-        })
-    } else {
-        const {latitude,longitude} = req.query;
-        User.aggregate(
-            [{
-                "$geoNear": {
-                    "near": {
-                        "type": "Point",
-                        "coordinates": [parseFloat(longitude), parseFloat(latitude)]
-                    },
-                    "distanceField": "distance",
-                    "maxDistance": defaultProviderRadius,
-                    "spherical": true,
-                    "query": { "loc.type": "Point" }
-                }
-            }, {
-                $unwind: '$foodItems'
-            }, {
-                $lookup: {
-                    from: "foodItems",
-                    localField: "foodItems",
-                    foreignField: "_id",
-                    as: "foodItems"
-                }
-            }, {
-                $project: {
-                    distance: 1,
-                    'foodItems': 1
-                }
-            }, {
-                "$sort": { "distance": 1 }
-            }],
-            function(err, results, stats) {
+            combinedQuery(latitude, longitude, defaultProviderRadius, foodQuery, function(err, results, stats) {
                 res.json(results);
             });
+
+        })
+    } else {
+        const { place_id } = req.query;
+        getLatAndLong(place_id, function(err, result) {
+            const { latitude, longitude } = req.query;
+            combinedQuery(latitude, longitude, defaultProviderRadius, foodQuery, function(err, results, stats) {
+                res.json(results);
+            });
+        });
     }
 }
 
