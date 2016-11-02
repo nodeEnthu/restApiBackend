@@ -61,7 +61,7 @@ function foodItems(req, res, next) {
 }
 
 function providers(req, res, next) {
-    let { cuisineSelectedMap, dietSelectedMap, addtnlQuery } = req.query;
+    let { cuisineSelectedMap, dietSelectedMap, addtnlQuery, guestLocation } = req.query;
     let defaultProviderRadius = 24000; // 10 miles
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
     dietSelectedMap = (dietSelectedMap) ? JSON.parse(dietSelectedMap) : undefined;
@@ -115,13 +115,16 @@ function providers(req, res, next) {
 
         })
     } else {
-        const { place_id } = req.query;
-        getLatAndLong(place_id, function(err, result) {
-            const { latitude, longitude } = req.query;
-            combinedQuery(latitude, longitude, defaultProviderRadius, foodQuery, function(err, results, stats) {
-                res.json(results);
+        guestLocation = (guestLocation) ? JSON.parse(guestLocation) : undefined;
+        if (guestLocation && guestLocation["place_id"]) {
+            getLatAndLong(guestLocation["place_id"], function(err, result) {
+                const { latitude, longitude } = result;
+                combinedQuery(latitude, longitude, defaultProviderRadius, foodQuery, function(err, results, stats) {
+                    res.json(results);
+                });
             });
-        });
+        }else res.json({message:"incorrect use of the api"});
+
     }
 }
 
