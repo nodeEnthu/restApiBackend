@@ -1,5 +1,6 @@
 import User from '../models/user';
 import FoodItem from '../models/foodItem'
+import Review from '../models/review'
 import jwt from 'jwt-simple';
 import moment from 'moment';
 import config from '../../config/env/index'
@@ -88,4 +89,28 @@ function addOrEditFoodItem(req, res, next) {
     });
 }
 
-export default { register, addOrEditFoodItem };
+function review (req,res,next){
+    const {foodItemId,creatorId,reviewDate,creatorName,rating,review} = req.body;
+    console.log(foodItemId,creatorId,reviewDate,creatorName,rating,review);
+    FoodItem.findById(foodItemId,function(err,foodItem){
+        console.log("foodItem",foodItem,err);
+        if(foodItem){
+            const newReview = new Review({
+                _creator:creatorId,
+                reviewDate:reviewDate ,
+                creatorName: creatorName,
+                rating:rating,
+                review:review
+            });
+            newReview.save(function(err,savedReview){
+                console.log('*********savedReview',err,savedReview);
+                foodItem.reviews.push(savedReview._id);
+                foodItem.save(function(err,savedFooditem){
+                    res.json(savedFooditem);
+                });
+            });
+        }
+    })
+
+}
+export default { register, addOrEditFoodItem,review};

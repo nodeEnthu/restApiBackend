@@ -88,4 +88,6 @@ function registerMostRecentSearchLocation(req, res, next) {
             })
         })
 }
-export default { zipcodeTypeAssist, address, addressTypeAssist, registerMostRecentSearchLocation };
+
+
+export default { zipcodeTypeAssist, address, addressTypeAssist, registerMostRecentSearchLocation};

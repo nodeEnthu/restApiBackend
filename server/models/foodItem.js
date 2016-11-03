@@ -7,6 +7,10 @@ var FoodItem_Schema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
+    reviews: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review'
+    }],
     // This is temporary before putting stuff in Amazon
     img:{type:String,default:"http://lorempixel.com/400/200/food"},
     placeOrderBy: { type: Date},
