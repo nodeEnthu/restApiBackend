@@ -89,28 +89,4 @@ function addOrEditFoodItem(req, res, next) {
     });
 }
 
-function review (req,res,next){
-    const {foodItemId,creatorId,reviewDate,creatorName,rating,review} = req.body;
-    console.log(foodItemId,creatorId,reviewDate,creatorName,rating,review);
-    FoodItem.findById(foodItemId,function(err,foodItem){
-        console.log("foodItem",foodItem,err);
-        if(foodItem){
-            const newReview = new Review({
-                _creator:creatorId,
-                reviewDate:reviewDate ,
-                creatorName: creatorName,
-                rating:rating,
-                review:review
-            });
-            newReview.save(function(err,savedReview){
-                console.log('*********savedReview',err,savedReview);
-                foodItem.reviews.push(savedReview._id);
-                foodItem.save(function(err,savedFooditem){
-                    res.json(savedFooditem);
-                });
-            });
-        }
-    })
-
-}
-export default { register, addOrEditFoodItem,review};
+export default { register, addOrEditFoodItem};

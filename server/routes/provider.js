@@ -10,8 +10,6 @@ router.route('/registration')
 router.route('/addOrEditFoodItem')
     // Post /api/providers/addOrEditFoodItem
     .post(ensureAuthenticated, providerCtrl.addOrEditFoodItem);
-router.route('/foodItem/review')
-	// Post /api/providers/foodItem/review
-	.post(ensureAuthenticated,providerCtrl.review)
+
 
 export default router;
