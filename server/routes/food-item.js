@@ -9,5 +9,8 @@ router.route('/:foodItemId/review')
 router.route('/:foodItemId/reviews')
 	// GET /api/foodItem/:id/reviews
 	.get(foodItemCtrl.reviews);
+router.route('/:foodItemId')
+	// POST /api/foodItem/:id
+	.get(foodItemCtrl.get);
 
 export default router; 

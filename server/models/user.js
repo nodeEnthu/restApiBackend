@@ -20,14 +20,15 @@ const UserSchema = new mongoose.Schema({
     }],
     /*
     * loc will be used to perform geo spatial queries and no other purpose
-    *
-    * location denotes the most recent location of a provider/consumer
+    * location denotes the most recent location of a provider
     * for provider: It means their business location that will be used to perform geolocation queries against
     * for consumers: It means the most recent address they have entered for delivery
     */
     loc: {
         type: { type: String, default: 'Point' },
-        coordinates: { type: [Number], default: [0, 0] }
+        coordinates: { type: [Number], default: [0, 0] },
+        searchText:String,
+        place_id:String
     },
     /*
     * the index in userSeachLocations .. which will be the delivery address

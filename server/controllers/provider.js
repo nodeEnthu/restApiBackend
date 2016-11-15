@@ -4,7 +4,7 @@ import Review from '../models/review'
 import jwt from 'jwt-simple';
 import moment from 'moment';
 import config from '../../config/env/index'
-import { getLatAndLong,saveLocation } from '../helpers/geo'
+import { getLatAndLong, saveLocation } from '../helpers/geo'
 
 
 function register(req, res, next) {
@@ -28,7 +28,7 @@ function register(req, res, next) {
                 user.deliveryAddtnlComments = userResponse.deliveryAddtnlComments;
                 user.deliveryMinOrder = userResponse.deliveryMinOrder;
                 user.deliveryRadius = userResponse.deliveryRadius;
-                user = saveLocation(user,result,place_id,searchText,action);
+                user = saveLocation(user, result, place_id, searchText, action);
                 user.save(function(err, savedUser) {
                     res.json(savedUser);
                 })
@@ -46,38 +46,16 @@ function addOrEditFoodItem(req, res, next) {
             res.send("not able to find the person");
         } else {
             // check if its a new item
-            if (userResponse.foodItemId) {
+            if (userResponse._id) {
                 // need to edit an existing food item
-
+                FoodItem.update({ _id: userResponse._id }, { $set: req.body }, { upsert: true }, function(err, foodItem) {
+                    res.json(foodItem);
+                })
             } else {
                 // its a new item
                 //create a new entry
-                const foodItem = new FoodItem({
-                    name: userResponse.name,
-                    description: userResponse.description,
-                    price:userResponse.price,
-                    cuisineType:userResponse.cuisineType,
-                    _creator: user._id,
-                    placeOrderBy: userResponse.placeOrderBy,
-                    serviceDate: userResponse.serviceDate,
-                    deliveryFlag: userResponse.deliveryFlag,
-                    deliveryRadius: userResponse.deliveryRadius,
-                    deliveryAddtnlComments: userResponse.deliveryAddtnlComments,
-                    pickUpFlag: userResponse.pickUpFlag,
-                    pickUpStartTime: userResponse.pickUpStartTime,
-                    pickUpEndTime: userResponse.pickUpEndTime,
-                    pickUpAddtnlComments: userResponse.pickUpAddtnlComments,
-                    organic: userResponse.organic,
-                    vegetarian: userResponse.vegetarian,
-                    glutenfree: userResponse.glutenfree,
-                    lowcarb: userResponse.lowcarb,
-                    vegan: userResponse.vegan,
-                    nutfree: userResponse.nutfree,
-                    oilfree: userResponse.oilfree,
-                    nondairy: userResponse.nondairy,
-                    indianFasting: userResponse.indianFasting,
-                    firstItem: true
-                })
+                const foodItem = new FoodItem(req.body);
+                foodItem._creator = user._id;
                 foodItem.save(function(err, savedFooditem) {
                     user.foodItems.push(savedFooditem._id);
                     user.save(function(err, savedUser) {
@@ -89,4 +67,4 @@ function addOrEditFoodItem(req, res, next) {
     });
 }
 
-export default { register, addOrEditFoodItem};
+export default { register, addOrEditFoodItem };

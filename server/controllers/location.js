@@ -3,7 +3,7 @@ import Zipcode from '../models/zipcode'
 import User from '../models/user';
 import request from 'request'
 import config from '../../config/env/index'
-import { getLatAndLong,saveLocation } from '../helpers/geo'
+import { getLatAndLong, saveLocation } from '../helpers/geo'
 
 /**
  * Load
@@ -55,17 +55,25 @@ function addressTypeAssist(req, res, next) {
             key: config.GOOGLE_PLACES_SECRET
         }
     }, function(error, response, body) {
-        let resolvedResponse = JSON.parse(body);
-        let formattedResponse = [];
-        for (let i = 0; i < resolvedResponse.predictions.length; i++) {
-            formattedResponse.push({
-                address: resolvedResponse.predictions[i].description,
-                place_id: resolvedResponse.predictions[i].place_id
-            });
+        if (error) {
+            res.json({
+                error:error.code || error,
+                addresses:[]
+            })
+        } else {
+            let resolvedResponse = JSON.parse(body);
+            let formattedResponse = [];
+            for (let i = 0; i < resolvedResponse.predictions.length; i++) {
+                formattedResponse.push({
+                    address: resolvedResponse.predictions[i].description,
+                    place_id: resolvedResponse.predictions[i].place_id
+                });
+            }
+            res.json({
+                addresses: formattedResponse,
+            })
         }
-        res.json({
-            addresses: formattedResponse,
-        })
+
     })
 }
 
@@ -78,7 +86,7 @@ function registerMostRecentSearchLocation(req, res, next) {
                 if (err) {
                     res.json({ error: err });
                 } else {
-                    user = saveLocation(user,result,place_id,address);
+                    user = saveLocation(user, result, place_id, address);
                     user.save(function(err, savedUser) {
                         res.json(savedUser);
                     })
@@ -88,4 +96,4 @@ function registerMostRecentSearchLocation(req, res, next) {
 }
 
 
-export default { zipcodeTypeAssist, address, addressTypeAssist, registerMostRecentSearchLocation};
+export default { zipcodeTypeAssist, address, addressTypeAssist, registerMostRecentSearchLocation };

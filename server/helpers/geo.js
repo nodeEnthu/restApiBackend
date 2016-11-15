@@ -46,14 +46,16 @@ export function saveLocation(user, result, place_id, address, action) {
         };
     }
     // check whether the location already exists in userSeachLocations with place_id
-    let saveLoc = true;
+    let locNotFound = true;
+    let deliveryAddressIndex = 0
     for (var i = 0; i < user.userSeachLocations.length; i++) {
         if (user.userSeachLocations[i].place_id === place_id) {
-            saveLoc = false;
+            locNotFound = false;
+            deliveryAddressIndex = i;
             break;
         }
     }
-    if (saveLoc) {
+    if (locNotFound) {
         let deliveryAddress = {
             "coordinates": [result.longitude, result.latitude],
             place_id: place_id,
@@ -61,6 +63,8 @@ export function saveLocation(user, result, place_id, address, action) {
         };
         user.userSeachLocations.push(deliveryAddress);
         user.deliveryAddressIndex = user.userSeachLocations.length - 1;
+    } else{
+        user.deliveryAddressIndex = deliveryAddressIndex;
     }
     return user;
 }

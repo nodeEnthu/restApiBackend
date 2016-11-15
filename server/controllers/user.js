@@ -34,7 +34,6 @@ function load(req, res) {
  * @returns {User}
  */
 function get(req, res) {
-    console.log(req.params);
     User.findById(req.params.userId)
         .populate('foodItems')
         .exec(function(err,userAndFoodItems){

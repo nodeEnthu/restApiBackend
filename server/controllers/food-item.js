@@ -37,4 +37,12 @@ function reviews(req, res, next) {
             res.json(foodItemAndReviews)
         })
 }
-export default { review, reviews };
+
+function get(req, res, next) {
+    const foodItemId = req.params.foodItemId
+    FoodItem.findById(foodItemId)
+        .exec(function(err, foodItem) {
+            res.json(foodItem)
+        })
+}
+export default { review, reviews, get};
