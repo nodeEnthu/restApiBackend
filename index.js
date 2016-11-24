@@ -20,5 +20,9 @@ app.listen(config.port, () => {
 	debug(`server started on port ${config.port} (${config.env})`);
 });
 
+app.get('/', function(req, res) {
+	res.sendFile(path.join(__dirname + '/public/index.html'));
+});
+
 
 export default app;
