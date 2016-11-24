@@ -5,7 +5,6 @@ import async from 'async';
 import { getLatAndLong } from '../helpers/geo'
 
 function combinedQuery(latitude, longitude, defaultProviderRadius, query, cb) {
-    console.log(latitude, longitude, defaultProviderRadius, query, cb);
     User.aggregate(
         [{
             "$geoNear": {

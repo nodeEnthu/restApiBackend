@@ -17,7 +17,7 @@ let providerRegistrationFuncArr = [];
 let providerFoodItemEntryFuncArr = [];
 let userSignUpFuncArr = [];
 
-let n = 100 // number of providers
+let n = 3 // number of providers
 let users = [];
 let addresses = [];
 let tokenArr = [];

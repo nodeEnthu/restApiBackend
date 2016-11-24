@@ -2,6 +2,7 @@ import User from '../models/user';
 import jwt from 'jwt-simple';
 import moment from 'moment';
 import config from '../../config/env/index'
+import { getLatAndLong, saveLocation } from '../helpers/geo'
 
 
 /**
@@ -23,7 +24,6 @@ function createJWT(user) {
 function load(req, res) {
     const loggedInUser = req.user;
     User.findById(loggedInUser)
-        .populate('foodItems')
         .exec(function(err,userAndFoodItems){
             res.json(userAndFoodItems)
         })
@@ -65,7 +65,8 @@ function create(req, res, next) {
                 email: req.body.email,
                 provider: req.body.provider,
                 img: (req.body.provider === 'fb') ? 'https://graph.facebook.com/' + req.body.userID + '/picture?type=small' : req.body.img,
-                [keyForId]: req.body.userID
+                [keyForId]: req.body.userID,
+                
             });
             user.saveAsync()
                 .then((savedUser) => {
