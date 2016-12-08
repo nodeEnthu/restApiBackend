@@ -7,6 +7,9 @@ const router = express.Router(); // eslint-disable-line new-cap
 router.route('/registration')
     // POST /api/providers/registration
     .post(ensureAuthenticated, providerCtrl.register);
+router.route('/publish')
+    // POST /api/providers/update
+    .post(ensureAuthenticated, providerCtrl.publish);
 router.route('/addOrEditFoodItem')
     // Post /api/providers/addOrEditFoodItem
     .post(ensureAuthenticated, providerCtrl.addOrEditFoodItem);
