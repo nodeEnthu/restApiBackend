@@ -13,27 +13,47 @@ function register(req, res, next) {
     const loggedInUser = req.user;
     const { searchText, place_id } = userResponse;
     User.findById(loggedInUser, function(err, user) {
-        getLatAndLong(place_id, function(err, result) {
-            if (err) {
-                res.json({ error: err });
-            } else {
-                user.userType = 'provider';
-                user.title = userResponse.title;
-                user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
-                user.includeAddressInEmail = userResponse.includeAddressInEmail;
-                user.description = userResponse.description;
-                user.pickUpFlag = userResponse.pickUpFlag;
-                user.pickUpAddtnlComments = userResponse.pickUpAddtnlComments;
-                user.doYouDeliverFlag = userResponse.doYouDeliverFlag;
-                user.deliveryAddtnlComments = userResponse.deliveryAddtnlComments;
-                user.deliveryMinOrder = userResponse.deliveryMinOrder;
-                user.deliveryRadius = userResponse.deliveryRadius;
-                user = saveLocation(user, result, place_id, searchText, action);
-                user.save(function(err, savedUser) {
-                    res.json(savedUser);
-                })
-            }
-        })
+        if (!user) {
+            res.send("not able to find the user");
+        } else {
+            getLatAndLong(place_id, function(err, result) {
+                if (err) {
+                    res.json({ error: err });
+                } else {
+                    user.userType = 'provider';
+                    user.title = userResponse.title;
+                    user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
+                    user.includeAddressInEmail = userResponse.includeAddressInEmail;
+                    user.description = userResponse.description;
+                    user.pickUpFlag = userResponse.pickUpFlag;
+                    user.pickUpAddtnlComments = userResponse.pickUpAddtnlComments;
+                    user.doYouDeliverFlag = userResponse.doYouDeliverFlag;
+                    user.deliveryAddtnlComments = userResponse.deliveryAddtnlComments;
+                    user.deliveryMinOrder = userResponse.deliveryMinOrder;
+                    user.deliveryRadius = userResponse.deliveryRadius;
+                    user = saveLocation(user, result, place_id, searchText, action);
+                    user.save(function(err, savedUser) {
+                        res.json(savedUser);
+                    })
+                }
+            })
+        }
+
+    });
+}
+
+function publish(req, res, next) {
+    const userResponse = req.body;
+    const loggedInUser = req.user;
+    User.findById(loggedInUser, function(err, user) {
+        if (!user) {
+            res.send("not able to find the user");
+        } else {
+            user.published = true;
+            user.save(function(err,savedUser) {
+                res.json(savedUser);
+            })
+        }
     });
 }
 
@@ -48,7 +68,7 @@ function addOrEditFoodItem(req, res, next) {
             // check if its a new item
             if (userResponse._id) {
                 // need to edit an existing food item
-                FoodItem.update({ _id: userResponse._id }, { $set: req.body }, { upsert: true }, function(err, foodItem) {
+                FoodItem.update({ _id: userResponse._id }, { $set: req.body }, { upsert: true, new: true }, function(err, foodItem) {
                     res.json(foodItem);
                 })
             } else {
@@ -67,4 +87,4 @@ function addOrEditFoodItem(req, res, next) {
     });
 }
 
-export default { register, addOrEditFoodItem };
+export default { register, addOrEditFoodItem, publish };

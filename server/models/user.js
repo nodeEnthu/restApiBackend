@@ -18,6 +18,7 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoodItem'
     }],
+    published:{ type: Boolean, default: false },
     /*
     * loc will be used to perform geo spatial queries and no other purpose
     * location denotes the most recent location of a provider
