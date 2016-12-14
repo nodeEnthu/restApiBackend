@@ -13,31 +13,32 @@ const UserSchema = new mongoose.Schema({
     fbUserID: { type: String, default: '' },
     gmailUserID: { type: String, default: '' },
     userType: { type: String, default: 'consumer' },
-    homepageUrl:String,    
+    homepageUrl: String,
     foodItems: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoodItem'
     }],
-    published:{ type: Boolean, default: false },
+    published: { type: Boolean, default: false },
+    publishStage: { type: Number, default: 0 },
     /*
-    * loc will be used to perform geo spatial queries and no other purpose
-    * location denotes the most recent location of a provider
-    * for provider: It means their business location that will be used to perform geolocation queries against
-    * for consumers: It means the most recent address they have entered for delivery
-    */
+     * loc will be used to perform geo spatial queries and no other purpose
+     * location denotes the most recent location of a provider
+     * for provider: It means their business location that will be used to perform geolocation queries against
+     * for consumers: It means the most recent address they have entered for delivery
+     */
     loc: {
         type: { type: String, default: 'Point' },
         coordinates: { type: [Number], default: [0, 0] },
-        searchText:String,
-        place_id:String
+        searchText: String,
+        place_id: String
     },
     /*
-    * the index in userSeachLocations .. which will be the delivery address
-    */
-    deliveryAddressIndex:{type:Number,default:0},
+     * the index in userSeachLocations .. which will be the delivery address
+     */
+    deliveryAddressIndex: { type: Number, default: 0 },
     /*
-    * Used as a list of addreses entered by the user
-    */
+     * Used as a list of addreses entered by the user
+     */
     userSeachLocations: [{
         searchText: { type: String },
         coordinates: { type: [Number], default: [0, 0] },
