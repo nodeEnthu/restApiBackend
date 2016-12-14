@@ -9,7 +9,7 @@ router.route('/registration')
     .post(ensureAuthenticated, providerCtrl.register);
 router.route('/publish')
     // POST /api/providers/update
-    .post(ensureAuthenticated, providerCtrl.publish);
+    .post(ensureAuthenticated,providerCtrl.publish);
 router.route('/addOrEditFoodItem')
     // Post /api/providers/addOrEditFoodItem
     .post(ensureAuthenticated, providerCtrl.addOrEditFoodItem);

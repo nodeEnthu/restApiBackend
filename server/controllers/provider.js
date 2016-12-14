@@ -32,6 +32,7 @@ function register(req, res, next) {
                     user.deliveryMinOrder = userResponse.deliveryMinOrder;
                     user.deliveryRadius = userResponse.deliveryRadius;
                     user = saveLocation(user, result, place_id, searchText, action);
+                    user.publishStage =1;
                     user.save(function(err, savedUser) {
                         res.json(savedUser);
                     })
@@ -50,6 +51,7 @@ function publish(req, res, next) {
             res.send("not able to find the user");
         } else {
             user.published = true;
+            user.publishStage = 2;
             user.save(function(err,savedUser) {
                 res.json(savedUser);
             })
@@ -78,6 +80,9 @@ function addOrEditFoodItem(req, res, next) {
                 foodItem._creator = user._id;
                 foodItem.save(function(err, savedFooditem) {
                     user.foodItems.push(savedFooditem._id);
+                    if(user.published ===false && req.body.publishStage){
+                        user.publishStage = req.body.publishStage;
+                    }
                     user.save(function(err, savedUser) {
                         res.json(savedFooditem);
                     })
