@@ -5,7 +5,7 @@ import locationRoutes from './location';
 import queryRoutes from './query';
 import emailRoutes from './send-email';
 import foodItemRoutes from './food-item';
-
+import imageUploadRoutes from './image-upload';
 const router = express.Router();	// eslint-disable-line new-cap
 
 /** GET /health-check - Check service health */
@@ -22,6 +22,7 @@ router.use('/locations',locationRoutes);
 router.use('/query',queryRoutes);
 router.use('/emails',emailRoutes);
 router.use('/foodItem',foodItemRoutes);
+router.use('/upload',imageUploadRoutes);
 
 
 export default router;
