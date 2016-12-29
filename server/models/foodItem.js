@@ -14,7 +14,7 @@ var FoodItem_Schema = new mongoose.Schema({
         ref: 'Review'
     }],
     // This is temporary before putting stuff in Amazon
-    img:{type:String,default:"http://lorempixel.com/400/200/food"},
+    imgUrl:String,
     placeOrderBy: { type: Date},
     serviceDate: { type: Date},
     deliveryFlag:{type:Boolean, default:false}, 

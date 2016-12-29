@@ -3,16 +3,16 @@ import request from 'request'
 import fs from 'fs'
 
 AWS.config.update({
-    "accessKeyId": "AKIAJ3QKBUNOSWEK3VPA",
-    "secretAccessKey": "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"
+    "accessKeyId": "AKIAISGDIT6QWWGXAEPA",
+    "secretAccessKey": "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"
 });
-let s3 = new AWS.S3();
+let s3 = new AWS.S3({region:'us-west-2'});
 
 function sign(req, res, next) {
     const fileName = req.body['file-name'];
     const fileType = req.body['file-type'];
     const s3Params = {
-        Bucket: 'image-uploader-dev-test',
+        Bucket: 'upload-test-dev',
         Key: fileName,
         Expires: 60,
         ContentType: fileType,
@@ -25,7 +25,8 @@ function sign(req, res, next) {
         }
         const returnData = {
             signedRequest: data,
-            url: `https://image-uploader-dev-test.s3.amazonaws.com/${fileName}`
+            url: `https://upload-test-dev.amazonaws.com/${fileName}`
+
         };
         res.json(returnData);
     });
