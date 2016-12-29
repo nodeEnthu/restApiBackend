@@ -31,6 +31,7 @@ function register(req, res, next) {
                     user.deliveryAddtnlComments = userResponse.deliveryAddtnlComments;
                     user.deliveryMinOrder = userResponse.deliveryMinOrder;
                     user.deliveryRadius = userResponse.deliveryRadius;
+                    user.imgUrl = userResponse.imgUrl;
                     user = saveLocation(user, result, place_id, searchText, action);
                     user.publishStage =1;
                     user.save(function(err, savedUser) {
@@ -80,9 +81,7 @@ function addOrEditFoodItem(req, res, next) {
                 foodItem._creator = user._id;
                 foodItem.save(function(err, savedFooditem) {
                     user.foodItems.push(savedFooditem._id);
-                    if(user.published ===false && req.body.publishStage){
-                        user.publishStage = req.body.publishStage;
-                    }
+                    user.publishStage = req.body.publishStage;
                     user.save(function(err, savedUser) {
                         res.json(savedFooditem);
                     })
