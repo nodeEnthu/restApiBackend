@@ -17,6 +17,7 @@ function orderSubmit(req, res) {
     //         pass: 'tennisenthu123'
     //     }
     // });
+    
     let transport = nodemailer.createTransport(sesTransport({
         "accessKeyId": "AKIAISGDIT6QWWGXAEPA",
         "secretAccessKey": "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",
@@ -27,7 +28,7 @@ function orderSubmit(req, res) {
     template.render(req.body, function(err, results) {
         let mailOptions = {
             from: '"fillurtummy 👥"<autoenthu@gmail.com>', // sender address
-            to: 'autoenthu@gmail.com', // list of receivers
+            to: req.body.customerEmailId+', '+req.body.providerEmailId,// list of receivers
             subject: 'Your order', // Subject line
             html: results.html, // html body
         };
