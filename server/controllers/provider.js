@@ -25,6 +25,7 @@ function register(req, res, next) {
                     user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
                     user.includeAddressInEmail = userResponse.includeAddressInEmail;
                     user.description = userResponse.description;
+                    user.email =  userResponse.email,
                     user.pickUpFlag = userResponse.pickUpFlag;
                     user.pickUpAddtnlComments = userResponse.pickUpAddtnlComments;
                     user.doYouDeliverFlag = userResponse.doYouDeliverFlag;
