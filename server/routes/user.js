@@ -2,7 +2,7 @@ import express from 'express';
 import validate from 'express-validation';
 import paramValidation from '../../config/param-validation';
 import userCtrl from '../controllers/user';
-import ensureAuthenticated from '../helpers/ensureAuthenticated';
+import ensureAuthenticated, {checkLogin} from '../helpers/ensureAuthenticated';
 const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/')
@@ -19,7 +19,7 @@ router.route('/signUp')
 
 router.route('/:userId')
     /** GET /api/users/:userId - Get user */
-    .get(userCtrl.get)
+    .get(checkLogin,userCtrl.get)
 
 /** PUT /api/users/:userId - Update user */
 .put(validate(paramValidation.updateUser), userCtrl.update)

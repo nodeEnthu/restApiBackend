@@ -24,7 +24,7 @@ function createJWT(user) {
 function load(req, res) {
     const loggedInUser = req.user;
     User.findById(loggedInUser)
-        .exec(function(err,userAndFoodItems){
+        .exec(function(err, userAndFoodItems) {
             res.json(userAndFoodItems)
         })
 }
@@ -34,10 +34,32 @@ function load(req, res) {
  * @returns {User}
  */
 function get(req, res) {
-    User.findById(req.params.userId)
+    const userId = req.params.userId;
+    const loggedInUser = req.user || '';
+
+    User.findById(userId)
         .populate('foodItems')
-        .exec(function(err,userAndFoodItems){
-            res.json(userAndFoodItems)
+        .lean()
+        .exec(function(err, userAndFoodItems) {
+            // inside userAndFoodItems we have to discern whether the user can put a review
+            userAndFoodItems = JSON.parse(JSON.stringify(userAndFoodItems));
+            if (userAndFoodItems) {
+                userAndFoodItems.foodItems.forEach(function(foodItem, index) {
+                    // user is not logged in
+                    if(loggedInUser === ''){
+                        foodItem.enableReview = false;;
+                    }
+                    else if (!foodItem.reviewers) {
+                        foodItem.enableReview = true;
+                    } else if (foodItem._creator != loggedInUser && foodItem.reviewers.indexOf(loggedInUser) === -1) {
+                        foodItem.enableReview = true;
+                    } else {
+                        foodItem.enableReview = false;
+                    }
+                })
+                res.json(userAndFoodItems);
+            }
+
         })
 }
 
@@ -55,10 +77,10 @@ function create(req, res, next) {
         if (result) {
             let alreadyPresentUser = result;
             let token = createJWT(alreadyPresentUser);
-                res.send({ 
-                        user: alreadyPresentUser, 
-                        token: token 
-                    });
+            res.send({
+                user: alreadyPresentUser,
+                token: token
+            });
         } else {
             const user = new User({
                 name: req.body.name,
@@ -66,15 +88,15 @@ function create(req, res, next) {
                 provider: req.body.provider,
                 img: (req.body.provider === 'fb') ? 'https://graph.facebook.com/' + req.body.userID + '/picture?type=small' : req.body.img,
                 [keyForId]: req.body.userID,
-                
+
             });
             user.saveAsync()
                 .then((savedUser) => {
                     let token = createJWT(savedUser);
-                    res.send({ 
-                            user: savedUser, 
-                            token: token 
-                        });
+                    res.send({
+                        user: savedUser,
+                        token: token
+                    });
                 })
                 .error((e) => next(e));
         }

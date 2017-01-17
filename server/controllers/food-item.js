@@ -7,23 +7,29 @@ function review(req, res, next) {
     const { foodItemId, creatorId, reviewDate, creatorName, rating, review } = req.body;
     FoodItem.findById(foodItemId, function(err, foodItem) {
         if (foodItem) {
-            const newReview = new Review({
-                _creator: creatorId,
-                reviewDate: reviewDate,
-                creatorName: creatorName,
-                rating: rating,
-                review: review
-            });
-            newReview.save(function(err, savedReview) {
-                foodItem.reviews.push(savedReview._id);
-                const numberOfReviews = foodItem.reviews.length;
-                const newRating = (foodItem.rating + parseInt(savedReview.rating))/numberOfReviews; // taking the mean
-                foodItem.rating = newRating;
-                foodItem.numOfReviews = numberOfReviews;
-                foodItem.save(function(err, savedFooditem) {
-                    res.json(savedFooditem);
+            foodItem.reviewers = foodItem.reviewers || [];
+            if (foodItem.reviewers.indexOf(creatorId) === -1) {
+                const newReview = new Review({
+                    _creator: creatorId,
+                    reviewDate: reviewDate,
+                    creatorName: creatorName,
+                    rating: rating,
+                    review: review
                 });
-            });
+                newReview.save(function(err, savedReview) {
+                    foodItem.reviews.push(savedReview._id);
+                    const numberOfReviews = foodItem.reviews.length;
+                    foodItem.reviewers.push(creatorId);
+                    const newRating = (foodItem.rating + parseInt(savedReview.rating)*(numberOfReviews-1)) / numberOfReviews; // taking the mean
+                    foodItem.rating = newRating;
+                    foodItem.numOfReviews = numberOfReviews;
+                    foodItem.save(function(err, savedFooditem) {
+                        res.json(savedFooditem);
+                    });
+                });
+            }else{
+                res.json({message:'already reviewed'});
+            }
         }
     })
 
@@ -45,4 +51,4 @@ function get(req, res, next) {
             res.json(foodItem)
         })
 }
-export default { review, reviews, get};
+export default { review, reviews, get };

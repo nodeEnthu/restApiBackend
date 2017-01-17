@@ -30,7 +30,6 @@ export default function ensureAuthenticated(req, res, next) {
 export function checkLogin(req, res, next) {
     let token = (req.header('Authorization')) ? req.header('Authorization').split(' ')[1] : undefined;
     let payload;
-    console.log('token',token);
     if (token) {
         payload = jwt.decode(token, config.TOKEN_SECRET);
         if (payload.exp <= moment().unix()) {
