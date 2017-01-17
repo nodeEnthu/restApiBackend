@@ -4,7 +4,7 @@ import moment from 'moment';
 import async from 'async';
 import { getLatAndLong } from '../helpers/geo'
 
-function combinedQuery(latitude, longitude, defaultProviderRadius, query, cb) {
+function combinedQuery(latitude, longitude, defaultProviderRadius,providerQuery,foodQuery, cb) {
     User.aggregate(
         [{
             "$geoNear": {
@@ -15,7 +15,7 @@ function combinedQuery(latitude, longitude, defaultProviderRadius, query, cb) {
                 "distanceField": "distance",
                 "maxDistance": defaultProviderRadius,
                 "spherical": true,
-                "query": { "loc.type": "Point" }
+                "query": providerQuery
             }
         }, {
             $unwind: '$foodItems'
@@ -27,12 +27,14 @@ function combinedQuery(latitude, longitude, defaultProviderRadius, query, cb) {
                 as: "foodItems"
             }
         }, {
-            $match: query
+            $match: foodQuery
         }, {
             $project: {
-                distance: 1,
-                loc: 1,
-                'foodItems': 1
+                'distance': 1,
+                'loc': 1,
+                'foodItems': 1,
+                'doYouDeliverFlag':1,
+                'pickUpFlag':1
             }
         }, {
             "$sort": { "distance": 1 }
@@ -65,6 +67,7 @@ function providers(req, res, next) {
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
     dietSelectedMap = (dietSelectedMap) ? JSON.parse(dietSelectedMap) : undefined;
     let foodQuery = {};
+    let providerQuery= { "loc.type": "Point"};
     // dietSelectedMap is all AND
     for (let key in dietSelectedMap) {
         if (dietSelectedMap.hasOwnProperty(key)) {
@@ -87,15 +90,15 @@ function providers(req, res, next) {
         addtnlQuery = JSON.parse(addtnlQuery);
         foodQuery['foodItems.serviceDate'] = { $gte: new Date(addtnlQuery.date) }
         if (addtnlQuery.orderMode) {
-            foodQuery['foodItems.' + addtnlQuery.orderMode] = true;
+            providerQuery[addtnlQuery.orderMode] = true;
         }
         if (addtnlQuery.providerRadius) {
             defaultProviderRadius = (addtnlQuery.providerRadius) ? addtnlQuery.providerRadius * 1600 : defaultProviderRadius;
         }
-
     }
 
     let userId = req.user;
+    // user is logged in
     if (userId) {
         User.findById(userId, function(err, user) {
             let latitude, longitude;
@@ -108,7 +111,7 @@ function providers(req, res, next) {
                 latitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[1];
                 longitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[0];
             }
-            combinedQuery(latitude, longitude, defaultProviderRadius, foodQuery, function(err, results, stats) {
+            combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery,foodQuery, function(err, results, stats) {
                 res.json(results);
             });
 
@@ -118,7 +121,7 @@ function providers(req, res, next) {
         if (guestLocation && guestLocation["place_id"]) {
             getLatAndLong(guestLocation["place_id"], function(err, result) {
                 const { latitude, longitude } = result;
-                combinedQuery(latitude, longitude, defaultProviderRadius, foodQuery, function(err, results, stats) {
+                combinedQuery(latitude, longitude, defaultProviderRadius,providerQuery,foodQuery, function(err, results, stats) {
                     res.json(results);
                 });
             });
