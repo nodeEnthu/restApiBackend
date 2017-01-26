@@ -14,7 +14,6 @@ var FoodItem_Schema = new mongoose.Schema({
         ref: 'Review'
     }],
     reviewers:[String],
-    // This is temporary before putting stuff in Amazon
     imgUrl:String,
     placeOrderBy: { type: Date},
     serviceDate: { type: Date},
