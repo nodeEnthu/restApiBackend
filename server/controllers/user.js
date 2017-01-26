@@ -3,7 +3,7 @@ import jwt from 'jwt-simple';
 import moment from 'moment';
 import config from '../../config/env/index'
 import { getLatAndLong, saveLocation } from '../helpers/geo'
-
+import async from 'async';
 
 /**
  * Create JWT token
@@ -36,31 +36,49 @@ function load(req, res) {
 function get(req, res) {
     const userId = req.params.userId;
     const loggedInUser = req.user || '';
-
-    User.findById(userId)
-        .populate('foodItems')
-        .lean()
-        .exec(function(err, userAndFoodItems) {
-            // inside userAndFoodItems we have to discern whether the user can put a review
-            userAndFoodItems = JSON.parse(JSON.stringify(userAndFoodItems));
-            if (userAndFoodItems) {
-                userAndFoodItems.foodItems.forEach(function(foodItem, index) {
-                    // user is not logged in
-                    if(loggedInUser === ''){
-                        foodItem.enableReview = false;;
-                    }
-                    else if (!foodItem.reviewers) {
-                        foodItem.enableReview = true;
-                    } else if (foodItem._creator != loggedInUser && foodItem.reviewers.indexOf(loggedInUser) === -1) {
-                        foodItem.enableReview = true;
-                    } else {
-                        foodItem.enableReview = false;
-                    }
-                })
-                res.json(userAndFoodItems);
+    async.waterfall([
+        function getreviewEligibleItems(cb) {
+            if (loggedInUser && loggedInUser != '') {
+                User.findById(loggedInUser)
+                    .lean()
+                    .exec(function(err, user) {
+                        cb(err, user.reviewEligibleFoodItems)
+                    })
+            }else{
+                cb(null,null);
             }
 
-        })
+        },
+        function getUserAndFoodItems(reviewEligibleFoodItems, cb) {
+            User.findById(userId)
+                .populate('foodItems')
+                .lean()
+                .exec(function(err, userAndFoodItems) {
+                    // inside userAndFoodItems we have to discern whether the user can put a review
+                    userAndFoodItems = JSON.parse(JSON.stringify(userAndFoodItems));
+                    if (userAndFoodItems) {
+                        reviewEligibleFoodItems = reviewEligibleFoodItems || [];
+                        userAndFoodItems.foodItems.forEach(function(foodItem, index) {
+                            // user is not logged in
+                            if (loggedInUser === '') {
+                                foodItem.enableReview = false;
+                            } else if (foodItem._creator != loggedInUser // creator should not be able to review own item
+                                && reviewEligibleFoodItems.indexOf(foodItem._id) > -1 // user is eligible for review
+                                && foodItem.reviewers.indexOf(loggedInUser) === -1) { // user has not submitted the review already
+                                foodItem.enableReview = true;
+                            } else {
+                                foodItem.enableReview = false;
+                            }
+                        })
+                        cb(err, userAndFoodItems);
+                    }
+
+                })
+        }
+    ], function(err, result) {
+        res.json(result);
+    });
+
 }
 
 /**

@@ -18,6 +18,7 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoodItem'
     }],
+    reviewEligibleFoodItems:[],
     imgUrl:String,
     published: { type: Boolean, default: false },
     publishStage: { type: Number, default: 0 },
