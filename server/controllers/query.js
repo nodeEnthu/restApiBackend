@@ -88,7 +88,7 @@ function providers(req, res, next) {
     }
     if (addtnlQuery) {
         addtnlQuery = JSON.parse(addtnlQuery);
-        foodQuery['foodItems.serviceDate'] = { $gte: new Date(addtnlQuery.date) }
+        foodQuery['foodItems.availability'] = { $gte: new Date(addtnlQuery.date) }
         if (addtnlQuery.orderMode) {
             providerQuery[addtnlQuery.orderMode] = true;
         }
