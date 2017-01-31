@@ -7,12 +7,20 @@ import Order from '../models/order';
 import User from '../models/user';
 
 
-const transport = nodemailer.createTransport(sesTransport({
-    "accessKeyId": "AKIAISGDIT6QWWGXAEPA",
-    "secretAccessKey": "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",
-    "region": 'us-west-2',
-    "rateLimit": 5 // do not send more than 5 messages in a second 
-}));
+// const transport = nodemailer.createTransport(sesTransport({
+//     "accessKeyId": "AKIAISGDIT6QWWGXAEPA",
+//     "secretAccessKey": "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",
+//     "region": 'us-west-2',
+//     "rateLimit": 5 // do not send more than 5 messages in a second 
+// }));
+
+let transport = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: 'autoenthu@gmail.com',
+        pass: 'R@ttanjr2'
+    }
+});
 
 let EmailTemplate = email_templates.EmailTemplate;
 const templatesDir = path.resolve(__dirname, '../../');
@@ -26,13 +34,7 @@ function orderSubmit(req, res) {
      *   3. return back the order summary with the current status (waiting for provider confirmation)
      */
 
-    // let transport = nodemailer.createTransport({
-    //     service: 'Gmail',
-    //     auth: {
-    //         user: 'autoenthu@gmail.com',
-    //         pass: 'tennisenthu123'
-    //     }
-    // });
+
 
     async.waterfall([
         function saveOrderInDb(cb) {
@@ -61,7 +63,7 @@ function orderSubmit(req, res) {
                         html: results.html, // html body
                     };
                     transport.sendMail(mailOptions, function(error, info) {
-                        cb(error);
+                        cb(error,savedOrder);
                     });
                 } else cb(err);
             });
@@ -99,7 +101,7 @@ function orderConfirmCustomer(req, res) {
             function enableReviewForCustomer(savedOrder, cb) {
                 User.findById(savedOrder._creator)
                     .exec(function(err, user) {
-                        console.log('*******',err,user,user.reviewEligibleFoodItems);
+                        console.log('*******', err, user, user.reviewEligibleFoodItems);
                         let foodItemIds = [];
                         for (let key in savedOrder.itemsCheckedOut) {
                             if (savedOrder.itemsCheckedOut.hasOwnProperty(key)) {
