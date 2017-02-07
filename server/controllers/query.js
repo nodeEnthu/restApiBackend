@@ -4,7 +4,7 @@ import moment from 'moment';
 import async from 'async';
 import { getLatAndLong } from '../helpers/geo'
 
-function combinedQuery(latitude, longitude, defaultProviderRadius,providerQuery,foodQuery, cb) {
+function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, cb) {
     User.aggregate(
         [{
             "$geoNear": {
@@ -33,8 +33,8 @@ function combinedQuery(latitude, longitude, defaultProviderRadius,providerQuery,
                 'distance': 1,
                 'loc': 1,
                 'foodItems': 1,
-                'doYouDeliverFlag':1,
-                'pickUpFlag':1
+                'doYouDeliverFlag': 1,
+                'pickUpFlag': 1
             }
         }, {
             "$sort": { "distance": 1 }
@@ -67,7 +67,7 @@ function providers(req, res, next) {
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
     dietSelectedMap = (dietSelectedMap) ? JSON.parse(dietSelectedMap) : undefined;
     let foodQuery = {};
-    let providerQuery= { "loc.type": "Point"};
+    let providerQuery = { "loc.type": "Point" };
     // dietSelectedMap is all AND
     for (let key in dietSelectedMap) {
         if (dietSelectedMap.hasOwnProperty(key)) {
@@ -102,16 +102,20 @@ function providers(req, res, next) {
     if (userId) {
         User.findById(userId, function(err, user) {
             let latitude, longitude;
-            if (user.type === 'consumer') {
-                latitude = user.loc.coordinates[1];
-                longitude = user.loc.coordinates[0];
-
+            if (user.userType === 'consumer') {
+                if (user.loc && user.loc.coordinates && user.loc.coordinates.length && user.loc.coordinates.length >0 && user.loc.coordinates[0] !=0) {
+                    latitude = user.loc.coordinates[1];
+                    longitude = user.loc.coordinates[0];
+                } else {
+                    res.json({ error: 'NOADDRFND' });
+                    return;
+                }
             } else {
                 // its a provider trying to look for food
                 latitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[1];
                 longitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[0];
             }
-            combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery,foodQuery, function(err, results, stats) {
+            combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, function(err, results, stats) {
                 res.json(results);
             });
 
@@ -121,11 +125,11 @@ function providers(req, res, next) {
         if (guestLocation && guestLocation["place_id"]) {
             getLatAndLong(guestLocation["place_id"], function(err, result) {
                 const { latitude, longitude } = result;
-                combinedQuery(latitude, longitude, defaultProviderRadius,providerQuery,foodQuery, function(err, results, stats) {
+                combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, function(err, results, stats) {
                     res.json(results);
                 });
             });
-        }else res.json({message:"incorrect use of the api"});
+        } else res.json({ message: "incorrect use of the api" });
 
     }
 }

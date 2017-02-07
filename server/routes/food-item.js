@@ -12,5 +12,8 @@ router.route('/:foodItemId/reviews')
 router.route('/:foodItemId')
 	// POST /api/foodItem/:id
 	.get(foodItemCtrl.get);
+router.route('/:foodItemId/remove')
+	// POST /api/foodItem/:id/remove
+	.post(checkLogin,foodItemCtrl.remove);
 
 export default router; 
