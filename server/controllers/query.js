@@ -15,6 +15,7 @@ function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery
                 "distanceField": "distance",
                 "maxDistance": defaultProviderRadius,
                 "spherical": true,
+                "distanceMultiplier": 0.000621371,
                 "query": providerQuery
             }
         }, {
@@ -63,11 +64,11 @@ function foodItems(req, res, next) {
 
 function providers(req, res, next) {
     let { cuisineSelectedMap, dietSelectedMap, addtnlQuery, guestLocation } = req.query;
-    let defaultProviderRadius = 24000; // 10 miles
+    let defaultProviderRadius = 1609 * 10; // 10 miles
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
     dietSelectedMap = (dietSelectedMap) ? JSON.parse(dietSelectedMap) : undefined;
     let foodQuery = {};
-    let providerQuery = { "loc.type": "Point" };
+    let providerQuery = { "loc.type": "Point",published:true };
     // dietSelectedMap is all AND
     for (let key in dietSelectedMap) {
         if (dietSelectedMap.hasOwnProperty(key)) {
@@ -93,7 +94,7 @@ function providers(req, res, next) {
             providerQuery[addtnlQuery.orderMode] = true;
         }
         if (addtnlQuery.providerRadius) {
-            defaultProviderRadius = (addtnlQuery.providerRadius) ? addtnlQuery.providerRadius * 1600 : defaultProviderRadius;
+            defaultProviderRadius = (addtnlQuery.providerRadius) ? addtnlQuery.providerRadius * 1609 : defaultProviderRadius;
         }
     }
 

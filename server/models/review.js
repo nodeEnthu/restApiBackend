@@ -10,6 +10,6 @@ var Review_Schema = new mongoose.Schema({
     creatorName: { type: String, required: true },
     rating: { type: Number, required: true },
     review: { type: String , required: true}
-}, { collection: 'reviews' });
+}, { collection: 'reviews',timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 export default mongoose.model('Review', Review_Schema);

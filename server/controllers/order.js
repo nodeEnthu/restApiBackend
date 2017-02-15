@@ -7,20 +7,20 @@ import Order from '../models/order';
 import User from '../models/user';
 
 
-// const transport = nodemailer.createTransport(sesTransport({
-//     "accessKeyId": "AKIAISGDIT6QWWGXAEPA",
-//     "secretAccessKey": "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",
-//     "region": 'us-west-2',
-//     "rateLimit": 5 // do not send more than 5 messages in a second 
-// }));
+const transport = nodemailer.createTransport(sesTransport({
+    "accessKeyId": "AKIAISGDIT6QWWGXAEPA",
+    "secretAccessKey": "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",
+    "region": 'us-west-2',
+    "rateLimit": 5 // do not send more than 5 messages in a second 
+}));
 
-let transport = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-        user: 'autoenthu@gmail.com',
-        pass: 'R@ttanjr2'
-    }
-});
+// let transport = nodemailer.createTransport({
+//     service: 'Gmail',
+//     auth: {
+//         user: 'autoenthu@gmail.com',
+//         pass: 'XXXXX'
+//     }
+// });
 
 let EmailTemplate = email_templates.EmailTemplate;
 const templatesDir = path.resolve(__dirname, '../../');
@@ -101,7 +101,6 @@ function orderConfirmCustomer(req, res) {
             function enableReviewForCustomer(savedOrder, cb) {
                 User.findById(savedOrder._creator)
                     .exec(function(err, user) {
-                        console.log('*******', err, user, user.reviewEligibleFoodItems);
                         let foodItemIds = [];
                         for (let key in savedOrder.itemsCheckedOut) {
                             if (savedOrder.itemsCheckedOut.hasOwnProperty(key)) {
@@ -159,7 +158,7 @@ function get(req, res) {
             res.json(orders);
         })
     } else if (role === 'provider') {
-        Order.find({ providerId: userId }, function(err, orders) {
+        Order.find({ _providerId: userId }, function(err, orders) {
             res.json(orders);
         })
     }

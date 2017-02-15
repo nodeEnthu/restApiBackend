@@ -78,11 +78,9 @@ function addOrEditFoodItem(req, res, next) {
             } else {
                 // its a new item
                 //create a new entry
-                console.log(req.body);
                 const foodItem = new FoodItem(req.body);
                 foodItem._creator = user._id;
                 foodItem.save(function(err, savedFooditem) {
-                    console.log(savedFooditem);
                     user.foodItems.push(savedFooditem._id);
                     user.publishStage = req.body.publishStage;
                     user.save(function(err, savedUser) {
