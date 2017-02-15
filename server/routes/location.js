@@ -16,7 +16,7 @@ router.route('/addressTypeAssist')
     .get(locationCtrl.addressTypeAssist);
 
 router.route('/registerMostRecentSearchLocation')
-   	/** GET /api/locations/registerLocation - Get list of predictions for addresses */
+   	/** GET /api/locations/registerMostRecentSearchLocation - Register location for the person */
     .get(ensureAuthenticated,locationCtrl.registerMostRecentSearchLocation);
 
 export default router;

@@ -38,6 +38,6 @@ var FoodItem_Schema = new mongoose.Schema({
     oilfree:Boolean,
     nondairy:Boolean,
     indianFasting:Boolean
-}, { collection: 'foodItems' });
+}, { collection: 'foodItems',timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 export default mongoose.model('FoodItem', FoodItem_Schema);

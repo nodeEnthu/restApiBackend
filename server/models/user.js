@@ -59,7 +59,7 @@ const UserSchema = new mongoose.Schema({
     deliveryRadius: String,
     deliveryMinOrder: String,
     deliveryAddtnlComments: String
-}, { collection: 'users' });
+}, { collection: 'users',timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 /**
  * Add your
