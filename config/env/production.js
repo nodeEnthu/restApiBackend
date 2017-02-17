@@ -1,6 +1,6 @@
 export default {
 	env: 'production',
-	db: 'mongodb://gautam_aws:user2@ds159517.mlab.com:59517/dev',
+	db: 'mongodb://gautam_dev:user3@ds159517.mlab.com:59517/dev',
 	port: 8081,
 	TOKEN_SECRET:'AVERYSECRETIVEINFO',
 	GOOGLE_SECRET:'I5_Srx8C2kztJfPo5k7tmsLY',
