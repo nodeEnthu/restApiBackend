@@ -90,7 +90,7 @@ function get(req, res) {
 function create(req, res, next) {
     const keyForId = req.body.provider + 'UserID';
     User.findOne({
-        email: req.body.email
+        [keyForId]: req.body.userID
     }, function(err, result) {
         if (result) {
             let alreadyPresentUser = result;
