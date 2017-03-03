@@ -9,6 +9,9 @@ router.route('/order-submit')
 router.route('/:orderId/orderConfirmCustomer')
 	// POST /api/order/325123132/orderConfirmCustomer
 	.post(order.orderConfirmCustomer);
+router.route('/:orderId/orderCancelCustomer')
+	// POST /api/order/325123132/orderConfirmCustomer
+	.post(order.orderCancelCustomer);
 router.route('/:userId/:role/get')
 	// GET /api/order/:userId/:role/get
 	.get(order.get);

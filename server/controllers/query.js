@@ -4,7 +4,7 @@ import moment from 'moment';
 import async from 'async';
 import { getLatAndLong } from '../helpers/geo'
 
-function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, cb) {
+function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, filterspageNum, cb) {
     User.aggregate(
         [{
             "$geoNear": {
@@ -39,6 +39,10 @@ function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery
             }
         }, {
             "$sort": { "distance": 1 }
+        }, {
+            "$limit": 12
+        }, {
+            "$skip": filterspageNum * 12
         }],
         function(err, results, stats) {
             cb(err, results, stats);
@@ -51,7 +55,7 @@ function foodItems(req, res, next) {
     // right now just return the foodItem with its provider
     let limit = 12;
     let combinedDietCuisineFilters = req.query["combinedDietCuisineFilters"];
-    let filterspageNum = req.query["filterspageNum"] * 12;
+    let filterspageNum = req.query["filterspageNum"] * 0;
     FoodItem
         .find(combinedDietCuisineFilters, 'name placeOrderBy serviceDate deliveryFlag pickUpStartTime pickUpEndTime _creator')
         .populate('_creator', 'name img pickUpFlag doYouDeliverFlag')
@@ -63,12 +67,13 @@ function foodItems(req, res, next) {
 }
 
 function providers(req, res, next) {
-    let { cuisineSelectedMap, dietSelectedMap, addtnlQuery, guestLocation } = req.query;
+    let { cuisineSelectedMap, dietSelectedMap, addtnlQuery, guestLocation, filterspageNum } = req.query;
     let defaultProviderRadius = 1609 * 10; // 10 miles
+    filterspageNum = filterspageNum || 0;
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
     dietSelectedMap = (dietSelectedMap) ? JSON.parse(dietSelectedMap) : undefined;
     let foodQuery = {};
-    let providerQuery = { "loc.type": "Point",published:true };
+    let providerQuery = { "loc.type": "Point", published: true };
     // dietSelectedMap is all AND
     for (let key in dietSelectedMap) {
         if (dietSelectedMap.hasOwnProperty(key)) {
@@ -104,7 +109,7 @@ function providers(req, res, next) {
         User.findById(userId, function(err, user) {
             let latitude, longitude;
             if (user.userType === 'consumer') {
-                if (user.loc && user.loc.coordinates && user.loc.coordinates.length && user.loc.coordinates.length >0 && user.loc.coordinates[0] !=0) {
+                if (user.loc && user.loc.coordinates && user.loc.coordinates.length && user.loc.coordinates.length > 0 && user.loc.coordinates[0] != 0) {
                     latitude = user.loc.coordinates[1];
                     longitude = user.loc.coordinates[0];
                 } else {
@@ -116,7 +121,7 @@ function providers(req, res, next) {
                 latitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[1];
                 longitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[0];
             }
-            combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, function(err, results, stats) {
+            combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, filterspageNum, function(err, results, stats) {
                 res.json(results);
             });
 
@@ -126,7 +131,7 @@ function providers(req, res, next) {
         if (guestLocation && guestLocation["place_id"]) {
             getLatAndLong(guestLocation["place_id"], function(err, result) {
                 const { latitude, longitude } = result;
-                combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, function(err, results, stats) {
+                combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, filterspageNum, function(err, results, stats) {
                     res.json(results);
                 });
             });
