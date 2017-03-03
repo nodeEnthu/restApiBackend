@@ -63,7 +63,7 @@ function orderSubmit(req, res) {
                         html: results.html, // html body
                     };
                     transport.sendMail(mailOptions, function(error, info) {
-                        cb(error,savedOrder);
+                        cb(error, savedOrder);
                     });
                 } else cb(err);
             });
@@ -150,6 +150,56 @@ function orderConfirmCustomer(req, res) {
 
 }
 
+function orderCancelCustomer(req, res) {
+    const { orderId } = req.body;
+    async.waterfall([
+            function findOrder(cb) {
+                Order.findById(orderId, function(err, order) {
+                    if (order) {
+                        if (order.mailSentToCustomer) {
+                            cb({ message: "email already sent" }, null);
+                        } else {
+                            order.mailSentToCustomer = true;
+                            order.save(function(err, savedOrder) {
+                                cb(null, savedOrder);
+                            });
+                        }
+                    } else cb(err || { message: "order id " + orderId + "  not found" });
+
+                });
+            },
+            function sendEmailToCustomer(savedOrder, cb) {
+                let resolvedSavedOrder = JSON.parse(JSON.stringify(savedOrder));
+                resolvedSavedOrder.orderType = 'delivery'; // hardcoded for now
+                let template = new EmailTemplate(path.join(templatesDir, 'order-cancel-customer'));
+                template.render(resolvedSavedOrder, function(err, results) {
+                    if (results && results.html) {
+                        let mailOptions = {
+                            from: '"fillurtummy 👥"<autoenthu@gmail.com>', // sender address
+                            to: resolvedSavedOrder.customerEmailId,
+                            subject: 'Order cancelled!', // Subject line
+                            html: results.html, // html body
+                        };
+                        transport.sendMail(mailOptions, function(error, info) {
+                            cb(error, savedOrder);
+                        });
+                    } else cb(err);
+                });
+            }
+        ],
+        function(err, savedOrder) {
+            if (err) {
+                return res.json({ error: err });
+            } else {
+                res.json({
+                    message: savedOrder
+                });
+            }
+        });
+
+}
+
+
 function get(req, res) {
     const userId = req.param('userId');
     const role = req.param('role');
@@ -164,4 +214,4 @@ function get(req, res) {
     }
 
 }
-export default { orderSubmit, orderConfirmCustomer, get }
+export default { orderSubmit, orderConfirmCustomer, get, orderCancelCustomer }
