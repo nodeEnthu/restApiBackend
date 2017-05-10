@@ -8,7 +8,6 @@ import APIError from '../helpers/APIError';
 const UserSchema = new mongoose.Schema({
     name: { type: String, default: '' },
     email: { type: String, default: '' },
-    provider: { type: String, default: '' },
     img: { type: String, default: '' },
     fbUserID: { type: String, default: '' },
     gmailUserID: { type: String, default: '' },
@@ -18,8 +17,9 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoodItem'
     }],
-    reviewEligibleFoodItems:[],
-    imgUrl:String,
+    service: {type:Number},
+    reviewEligibleFoodItems: [],
+    imgUrl: String,
     published: { type: Boolean, default: false },
     publishStage: { type: Number, default: 0 },
     /*
@@ -46,20 +46,20 @@ const UserSchema = new mongoose.Schema({
         coordinates: { type: [Number], default: [0, 0] },
         place_id: { type: String }
     }],
-    pickUpFlag: { type: Boolean, default: true },
-    pickUpAddtnlComments: { type: String, default: '' },
+    /*
+     * pickup = 1 , both  = 2, delivery = 3
+     */
+    serviceOffered: { type: Number, default: 1 },
+    addtnlComments: { type: String, default: '' },
     title: String,
     keepAddressPrivateFlag: { type: Boolean, default: false },
-    includeAddressInEmail: { type: Boolean, default: true },
     description: String,
     streetName: String,
     crosStreetName: String,
     city: String,
-    doYouDeliverFlag: { type: Boolean, default: false },
     deliveryRadius: String,
-    deliveryMinOrder: String,
-    deliveryAddtnlComments: String
-}, { collection: 'users',timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
+    deliveryMinOrder: String
+}, { collection: 'users', timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 /**
  * Add your

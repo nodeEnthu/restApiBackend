@@ -42,10 +42,12 @@ function get(req, res) {
                 User.findById(loggedInUser)
                     .lean()
                     .exec(function(err, user) {
-                        cb(err, user.reviewEligibleFoodItems)
+                        if (!user) {
+                            cb(new Error("no user found"));
+                        } else cb(err, user.reviewEligibleFoodItems)
                     })
-            }else{
-                cb(null,null);
+            } else {
+                cb(null, null);
             }
 
         },
@@ -54,29 +56,37 @@ function get(req, res) {
                 .populate('foodItems')
                 .lean()
                 .exec(function(err, userAndFoodItems) {
-                    // inside userAndFoodItems we have to discern whether the user can put a review
-                    userAndFoodItems = JSON.parse(JSON.stringify(userAndFoodItems));
-                    if (userAndFoodItems) {
-                        reviewEligibleFoodItems = reviewEligibleFoodItems || [];
-                        userAndFoodItems.foodItems.forEach(function(foodItem, index) {
-                            // user is not logged in
-                            if (loggedInUser === '') {
-                                foodItem.enableReview = false;
-                            } else if (foodItem._creator != loggedInUser // creator should not be able to review own item
-                                && reviewEligibleFoodItems.indexOf(foodItem._id) > -1 // user is eligible for review
-                                && foodItem.reviewers.indexOf(loggedInUser) === -1) { // user has not submitted the review already
-                                foodItem.enableReview = true;
-                            } else {
-                                foodItem.enableReview = false;
-                            }
-                        })
+                    if (err) {
+                        cb(err);
+                    } else if (!userAndFoodItems) {
+                        cb(new Error("no user found"));
+                    } else {
+                        // inside userAndFoodItems we have to discern whether the user can put a review
+                        userAndFoodItems = JSON.parse(JSON.stringify(userAndFoodItems));
+                        if (userAndFoodItems) {
+                            reviewEligibleFoodItems = reviewEligibleFoodItems || [];
+                            userAndFoodItems.foodItems.forEach(function(foodItem, index) {
+                                // user is not logged in
+                                if (loggedInUser === '') {
+                                    foodItem.enableReview = false;
+                                } else if (foodItem._creator != loggedInUser // creator should not be able to review own item
+                                    && reviewEligibleFoodItems.indexOf(foodItem._id) > -1 // user is eligible for review
+                                    && foodItem.reviewers.indexOf(loggedInUser) === -1) { // user has not submitted the review already
+                                    foodItem.enableReview = true;
+                                } else {
+                                    foodItem.enableReview = false;
+                                }
+                            })
+                        }
                         cb(err, userAndFoodItems);
                     }
-
                 })
         }
     ], function(err, result) {
-        res.json(result);
+        if (err) {
+            res.status(404);
+            res.send(err);
+        } else res.json(result);
     });
 
 }

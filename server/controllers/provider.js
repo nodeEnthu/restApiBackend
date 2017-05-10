@@ -12,6 +12,20 @@ function register(req, res, next) {
     const userResponse = req.body;
     const loggedInUser = req.user;
     const { searchText, place_id } = userResponse;
+    let serviceOfferedCode;
+    switch (userResponse.serviceOffered) {
+        case "pickup":
+            serviceOfferedCode = 1;
+            break;
+        case "both":
+            serviceOfferedCode = 2;
+            break;
+        case "delivery":
+            serviceOfferedCode = 3;
+            break;
+        default:
+            serviceOfferedCode = 1;
+    }
     User.findById(loggedInUser, function(err, user) {
         if (!user) {
             res.send("not able to find the user");
@@ -23,18 +37,17 @@ function register(req, res, next) {
                     user.userType = 'provider';
                     user.title = userResponse.title;
                     user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
-                    user.includeAddressInEmail = userResponse.includeAddressInEmail;
                     user.description = userResponse.description;
-                    user.email =  userResponse.email,
-                    user.pickUpFlag = userResponse.pickUpFlag;
-                    user.pickUpAddtnlComments = userResponse.pickUpAddtnlComments;
+                    user.email = userResponse.email,
+                    user.serviceOffered = serviceOfferedCode;
+                    user.addtnlComments = userResponse.addtnlComments;
                     user.doYouDeliverFlag = userResponse.doYouDeliverFlag;
-                    user.deliveryAddtnlComments = userResponse.deliveryAddtnlComments;
                     user.deliveryMinOrder = userResponse.deliveryMinOrder;
                     user.deliveryRadius = userResponse.deliveryRadius;
                     user.imgUrl = userResponse.imgUrl;
                     user = saveLocation(user, result, place_id, searchText, action);
-                    user.publishStage =1;
+                    // now we are ready to go to publish stage 2 .. so 2 instead of 1
+                    user.publishStage = 2;
                     user.save(function(err, savedUser) {
                         res.json(savedUser);
                     })
@@ -46,15 +59,14 @@ function register(req, res, next) {
 }
 
 function publish(req, res, next) {
-    const userResponse = req.body;
     const loggedInUser = req.user;
     User.findById(loggedInUser, function(err, user) {
         if (!user) {
             res.send("not able to find the user");
         } else {
             user.published = true;
-            user.publishStage = 2;
-            user.save(function(err,savedUser) {
+            user.publishStage = 3;
+            user.save(function(err, savedUser) {
                 res.json(savedUser);
             })
         }
@@ -65,6 +77,7 @@ function addOrEditFoodItem(req, res, next) {
     const userResponse = req.body;
     const loggedInUser = req.user;
     // first get the user
+
     User.findById(loggedInUser, function(err, user) {
         if (!user) {
             res.send("not able to find the person");
@@ -81,11 +94,16 @@ function addOrEditFoodItem(req, res, next) {
                 const foodItem = new FoodItem(req.body);
                 foodItem._creator = user._id;
                 foodItem.save(function(err, savedFooditem) {
-                    user.foodItems.push(savedFooditem._id);
-                    user.publishStage = req.body.publishStage;
-                    user.save(function(err, savedUser) {
-                        res.json(savedFooditem);
-                    })
+                    if (err) {
+                        res.send("fooditem not saved");
+                    } else {
+                        user.foodItems.push(savedFooditem._id);
+                        user.publishStage = req.body.publishStage;
+                        user.save(function(err, savedUser) {
+                            res.json(savedFooditem);
+                        })
+                    }
+
                 })
             }
         }

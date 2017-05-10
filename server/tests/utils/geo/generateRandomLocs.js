@@ -6,10 +6,9 @@ import request from 'request'
 let addresses = [];
 let givenGeoGenPlaceIdArr = []
 function generateRandomPoint(center, radius) {
-    var x0 = center.lng;
     var y0 = center.lat;
-    // Convert Radius from meters to degrees.
-    var rd = radius / 111300;
+    var x0 = center.lng;
+    var rd = radius / 111300; //about 111300 meters in one degree
 
     var u = Math.random();
     var v = Math.random();
@@ -19,9 +18,15 @@ function generateRandomPoint(center, radius) {
     var x = w * Math.cos(t);
     var y = w * Math.sin(t);
 
+    //Adjust the x-coordinate for the shrinking of the east-west distances
     var xp = x / Math.cos(y0);
 
+    var newlat = y + y0;
+    var newlon = x + x0;
+    var newlon2 = xp + x0;
+
     // Resulting point.
+    console.log({ 'lat': y + y0, 'lng': x + x0 })
     return { 'lat': y + y0, 'lng': x + x0 };
 }
 

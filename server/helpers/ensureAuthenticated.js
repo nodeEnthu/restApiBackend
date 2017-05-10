@@ -41,6 +41,14 @@ export function checkLogin(req, res, next) {
     } else {
         next();
     }
-
-
+}
+export function userMakingChangeToOwnProfile(req, res, next) {
+    let loggedInUserId = req.user;
+    let requestParams = req.body;
+    let validRequest= (loggedInUserId === requestParams._id || loggedInUserId === requestParams._creator);
+    if(validRequest){
+        next();
+    }else{
+        res.status(401).send({ message: 'unauthorized' });
+    }
 }

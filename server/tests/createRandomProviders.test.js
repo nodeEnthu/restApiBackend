@@ -8,30 +8,23 @@ import async from 'async';
 import fs from 'fs';
 import faker from 'faker';
 import generatePlaceIds from './utils/geo/generateRandomLocs'
-
+import moment from 'moment';
 
 faker.locale = "en_US";
 chai.config.includeStack = true;
 
-let providerRegistrationFuncArr = [];
-let providerFoodItemEntryFuncArr = [];
-let userSignUpFuncArr = [];
+let providerRegistrationFuncArr = [],
+    providerFoodItemEntryFuncArr = [],
+    userSignUpFuncArr = [],
+    publishProvidersFuncArr = [],
+    users = [],
+    addresses = [],
+    tokenArr = [],
+    n = 100; // number of providers
 
-let n = 3 // number of providers
-let users = [];
-let addresses = [];
-let tokenArr = [];
-let foodItemArr = ["chinese","american","african","caribbean","japanese","indian","italian","mediterrnean","korean","mexican","viatnamese"]
-Date.prototype.yyyymmdd = function() {
-    var mm = this.getMonth() + 1; // getMonth() is zero-based
-    var dd = this.getDate();
-
-    return [this.getFullYear(), !mm[1] && '0', mm, !dd[1] && '0', dd].join('-'); // padding
-};
-let today = new Date();
-let date = new Date();
-let twoDaysAhead = date.setDate(date.getDate() + 2);
-
+let foodItemArr = ["mexican", "indian", "asian", "french", "greek", "african", "dessert", "italian", "mediterranean", "american", "bbq"];
+let today = moment().add(1, "days").startOf('day').format('YYYY-MM-DD')
+let sevenDaysAhead = moment().add(8, "days").startOf('day').format('YYYY-MM-DD')
 
 function userSignUpFunc(index) {
     return function(callback) {
@@ -39,7 +32,6 @@ function userSignUpFunc(index) {
             name: faker.name.findName(),
             email: faker.internet.email(),
             provider: 'gmail',
-            img: faker.image.imageUrl(),
             gmailUserId: faker.random.uuid()
         }
         request(app)
@@ -65,15 +57,13 @@ function providerRegistrationFunc(index) {
         user.userType = 'provider';
         user.title = faker.company.companyName();
         user.keepAddressPrivateFlag = faker.random.boolean();
-        user.includeAddressInEmail = faker.random.boolean();
         user.description = faker.lorem.paragraph();
         user.streetName = faker.address.streetAddress("###");
         user.crosStreetName = faker.address.secondaryAddress();
         user.city = faker.address.city();
-        user.pickUpFlag = faker.random.boolean();
-        user.pickUpAddtnlComments = faker.lorem.sentence();
-        user.doYouDeliverFlag = faker.random.boolean();
-        user.deliveryAddtnlComments = faker.lorem.sentence();
+        user.imgUrl = "http://lorempixel.com/400/200/people/";
+        user.serviceOffered = faker.random.arrayElement([1, 2, 3]);
+        user.addtnlComments = faker.lorem.sentence();
         user.deliveryMinOrder = faker.random.number({ min: 35, max: 50 });
         user.deliveryRadius = faker.random.number({ min: 5, max: 20 });
         user.place_id = addresses[index].place_id;
@@ -92,28 +82,27 @@ function providerRegistrationFunc(index) {
 }
 
 function providerFoodItemEntryFunc(index) {
-    var randomNumber = Math.floor(Math.random()*foodItemArr.length);
+    var randomNumber = Math.floor(Math.random() * foodItemArr.length);
     return function(callback) {
         let foodItem = {
-            deliveryFlag: faker.random.boolean(),
-            description: faker.lorem.paragraph(),
-            glutenfree: faker.random.boolean(),
-            price:faker.random.number({min:8, max:25}),
-            indianFasting: faker.random.boolean(),
-            lowcarb: faker.random.boolean(),
+            imgUrl: "http://lorempixel.com/400/200/food/",
             name: faker.random.words(),
-            cuisineType:foodItemArr[randomNumber],
+            description: faker.lorem.paragraph(),
+            price: faker.random.number({ min: 5, max: 40 }),
+            cuisineType: foodItemArr[randomNumber],
+            pickUpEndTime: "64800000",
+            pickUpStartTime: "36000000",
+            placeOrderBy: faker.random.arrayElement([0, 1, 2, 3]),
+            availability: [faker.date.between(today, sevenDaysAhead)],
+            vegan: faker.random.boolean(),
+            vegetarian: faker.random.boolean(),
             nondairy: faker.random.boolean(),
             nutfree: faker.random.boolean(),
             oilfree: faker.random.boolean(),
             organic: faker.random.boolean(),
-            pickUpEndTime: "2016-08-23T20:45:11.493Z",
-            pickUpStartTime: "2016-08-23T22:44:05.595Z",
-            placeOrderBy: today,
-            serviceDate: twoDaysAhead,
-            snackBarOpen: faker.random.boolean(),
-            vegan: faker.random.boolean(),
-            vegetarian: faker.random.boolean(),
+            indianFasting: faker.random.boolean(),
+            lowcarb: faker.random.boolean(),
+            glutenfree: faker.random.boolean()
         };
         let user = users[index];
         let token = tokenArr[index].token;
@@ -128,6 +117,19 @@ function providerFoodItemEntryFunc(index) {
     }
 }
 
+function publishProvidersFunc(index) {
+    return function(callMeBack) {
+        let user = users[index];
+        let token = tokenArr[index].token;
+        request(app)
+            .post('/api/providers/publish')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
+            .then(res => {
+                callMeBack(null, res);
+            })
+    }
+}
 describe("# Creating random providers for the search view", function() {
     // this is not a test but creating data for the search view
 
@@ -136,6 +138,7 @@ describe("# Creating random providers for the search view", function() {
         userSignUpFuncArr.push(userSignUpFunc(i));
         providerRegistrationFuncArr.push(providerRegistrationFunc(i));
         providerFoodItemEntryFuncArr.push(providerFoodItemEntryFunc(i));
+        publishProvidersFuncArr.push(publishProvidersFunc(i));
     }
     async.series(
         [
@@ -146,8 +149,18 @@ describe("# Creating random providers for the search view", function() {
             },
             function(cb) {
                 // 50 kms
-                generatePlaceIds({ lat: 37.7670730, lng: -121.9866690 }, 50000, parseInt(n / 3), function(err, results) {
+                generatePlaceIds({ lat: 37.7670730, lng: -121.9866690 }, 50000, parseInt(n/5), function(err, results) {
                     addresses = addresses.concat(results);
+                    cb();
+                })
+            },
+            function(cb) {
+                async.parallel(providerRegistrationFuncArr, function(err, results) {
+                    cb();
+                })
+            },
+            function(cb) {
+                async.parallel(publishProvidersFuncArr, function(err, results) {
                     cb();
                 })
             },
@@ -160,7 +173,7 @@ describe("# Creating random providers for the search view", function() {
                 async.parallel(providerFoodItemEntryFuncArr, function(err, results) {
                     cb();
                 })
-            },
+            }
         ],
         function(err, results) {
             //done 
