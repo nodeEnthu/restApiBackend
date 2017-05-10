@@ -1,11 +1,11 @@
 import express from 'express';
 import order from '../controllers/order';
-import ensureAuthenticated, {checkLogin} from '../helpers/ensureAuthenticated';
+import ensureAuthenticated, {checkLogin , userMakingChangeToOwnProfile} from '../helpers/ensureAuthenticated';
 const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/order-submit')
 	// POST /api/order/order-submit
-	.post(order.orderSubmit);
+	.post(ensureAuthenticated,userMakingChangeToOwnProfile,order.orderSubmit);
 router.route('/:orderId/orderConfirmCustomer')
 	// POST /api/order/325123132/orderConfirmCustomer
 	.post(order.orderConfirmCustomer);

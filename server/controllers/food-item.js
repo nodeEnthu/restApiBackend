@@ -20,7 +20,7 @@ function review(req, res, next) {
                     foodItem.reviews.push(savedReview._id);
                     const numberOfReviews = foodItem.reviews.length;
                     foodItem.reviewers.push(creatorId);
-                    const newRating = (savedReview.rating  + parseInt(foodItem.rating) * (numberOfReviews - 1)) / numberOfReviews; // taking the mean
+                    const newRating = (savedReview.rating + parseInt(foodItem.rating) * (numberOfReviews - 1)) / numberOfReviews; // taking the mean
                     foodItem.rating = newRating;
                     foodItem.numOfReviews = numberOfReviews;
                     foodItem.save(function(err, savedFooditem) {
@@ -99,7 +99,20 @@ function remove(req, res, next) {
         ], function(err, resultArr) {
             res.json(resultArr);
         });
-    }else res.json({error:"incorrect use of api"});
+    } else res.json({ error: "incorrect use of api" });
 
 }
-export default { review, reviews, get, remove };
+
+/**
+ * Get fooditem list.
+ * @property {number} req.query.skip - Number of fooditems to be skipped.
+ * @property {number} req.query.limit - Limit number of fooditems to be returned.
+ * @returns {FoodItem[]}
+ */
+function list(req, res, next) {
+    const { limit = 50, skip = 0 } = req.query;
+    FoodItem.list({ limit, skip }).then((foodItems) => res.json(foodItems))
+        .error((e) => next(e));
+}
+
+export default { review, reviews, get, remove, list };

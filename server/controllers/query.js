@@ -4,6 +4,8 @@ import moment from 'moment';
 import async from 'async';
 import { getLatAndLong } from '../helpers/geo'
 
+export const CORRECTION_FACTOR = 1.2;
+
 function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, filterspageNum, cb) {
     User.aggregate(
         [{
@@ -34,8 +36,7 @@ function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery
                 'distance': 1,
                 'loc': 1,
                 'foodItems': 1,
-                'doYouDeliverFlag': 1,
-                'pickUpFlag': 1
+                'serviceOffered': 1
             }
         }, {
             "$sort": { "distance": 1 }
@@ -94,9 +95,24 @@ function providers(req, res, next) {
     }
     if (addtnlQuery) {
         addtnlQuery = JSON.parse(addtnlQuery);
-        foodQuery['foodItems.availability'] = { $gte: new Date(addtnlQuery.date) }
-        if (addtnlQuery.orderMode) {
-            providerQuery[addtnlQuery.orderMode] = true;
+        let queryDate = (addtnlQuery.date) ? new Date(addtnlQuery.date) : new Date();
+        foodQuery['foodItems.availability'] = { $gte: queryDate }
+        if (addtnlQuery.orderMode && addtnlQuery.orderMode.length > 0) {
+            let orderModeQuery = {};
+            switch (addtnlQuery.orderMode) {
+                case "pickup":
+                    orderModeQuery = { $lte: 2 };
+                    break;
+                case "delivery":
+                    orderModeQuery = { $gte: 2 };
+                    break;
+                case "both":
+                    orderModeQuery = { $gte: 1 };
+                    break;
+                default:
+                    orderModeQuery = { $gte: 1 };
+            }
+            providerQuery.serviceOffered = orderModeQuery;
         }
         if (addtnlQuery.providerRadius) {
             defaultProviderRadius = (addtnlQuery.providerRadius) ? addtnlQuery.providerRadius * 1609 : defaultProviderRadius;
@@ -123,17 +139,22 @@ function providers(req, res, next) {
             }
             combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, filterspageNum, function(err, results, stats) {
                 res.json(results);
-            });
-
-        })
+            })
+        });
     } else {
         guestLocation = (guestLocation) ? JSON.parse(guestLocation) : undefined;
         if (guestLocation && guestLocation["place_id"]) {
             getLatAndLong(guestLocation["place_id"], function(err, result) {
-                const { latitude, longitude } = result;
-                combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, filterspageNum, function(err, results, stats) {
-                    res.json(results);
-                });
+                if (err) {
+                    res.status(404);
+                    res.send("err");
+                } else {
+                    const { latitude, longitude } = result;
+                    combinedQuery(latitude, longitude, defaultProviderRadius * CORRECTION_FACTOR, providerQuery, foodQuery, filterspageNum, function(err, results, stats) {
+                        res.json(results);
+                    });
+                }
+
             });
         } else res.json({ message: "incorrect use of the api" });
 
