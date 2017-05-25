@@ -83,22 +83,18 @@ export function getProviderDisplayAddress(result) {
     var resultArr = [];
     for (var key in address) {
         if (address.hasOwnProperty(key)) {
-            if (address[key] === 'street_number') {
-                // dont do anything
-            } else if (address[key] && address[key].length > 0) {
+            if (address[key] && address[key].length > 0) {
                 resultArr.push(address[key]);
             }
         }
     }
+    let hasStreetNumber = (address["street_number"])? true: false;
     if (resultArr.length === 2) {
-        // dont do anything
     } else if (resultArr.length === 3) {
-        // take last two city and state
         resultArr.splice(0, 1);
-    } else {
-        // take last two city and state
-        resultArr.splice(0, 2);
-    }
+    } else if(!hasStreetNumber && resultArr.length === 4) {
+        resultArr.splice(0, 1);
+    } else resultArr.splice(0, 2);
     return resultArr.join(', ');
 }
 
