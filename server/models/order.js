@@ -16,6 +16,7 @@ var Order_Schema = new mongoose.Schema({
     customerAddress: String,
     customerEmailId: String,
     providerEmailId: String,
+    addtnlAddressInfo:String,
     orderType: String,
     subTotal: String,
     modeOfPayment: String,

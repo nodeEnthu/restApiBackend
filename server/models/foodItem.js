@@ -13,6 +13,7 @@ var FoodItem_Schema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Review'
     }],
+    avalilabilityType:{type:String,default:'onOrder'},
     reviewers:[String],
     imgUrl:String,
     placeOrderBy: { type: Number},

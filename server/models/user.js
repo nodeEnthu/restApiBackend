@@ -17,7 +17,7 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoodItem'
     }],
-    service: {type:Number},
+    service: { type: Number },
     reviewEligibleFoodItems: [],
     imgUrl: String,
     published: { type: Boolean, default: false },
@@ -34,6 +34,11 @@ const UserSchema = new mongoose.Schema({
         searchText: String,
         place_id: String
     },
+    /*
+    * keepAddressPrivateFlag = true 
+    */
+    shortAddress: { type: String, default: '' },
+    fullAddress: { type: String, default: '' },
     /*
      * the index in userSeachLocations .. which will be the delivery address
      */
@@ -54,9 +59,6 @@ const UserSchema = new mongoose.Schema({
     title: String,
     keepAddressPrivateFlag: { type: Boolean, default: false },
     description: String,
-    streetName: String,
-    crosStreetName: String,
-    city: String,
     deliveryRadius: String,
     deliveryMinOrder: String
 }, { collection: 'users', timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });

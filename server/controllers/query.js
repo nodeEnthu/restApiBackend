@@ -7,6 +7,8 @@ import { getLatAndLong } from '../helpers/geo'
 export const CORRECTION_FACTOR = 1.2;
 
 function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, filterspageNum, cb) {
+    filterspageNum = parseInt(filterspageNum) || 0;
+    let skip = filterspageNum * 12;
     User.aggregate(
         [{
             "$geoNear": {
@@ -41,9 +43,9 @@ function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery
         }, {
             "$sort": { "distance": 1 }
         }, {
-            "$limit": 12
+            "$skip": skip
         }, {
-            "$skip": filterspageNum * 12
+            "$limit": 12
         }],
         function(err, results, stats) {
             cb(err, results, stats);
@@ -68,7 +70,7 @@ function foodItems(req, res, next) {
 }
 
 function providers(req, res, next) {
-    let { cuisineSelectedMap, dietSelectedMap, addtnlQuery, guestLocation, filterspageNum } = req.query;
+    let { cuisineSelectedMap, dietSelectedMap, addtnlQuery, guestLocation, filterspageNum, onOrder } = req.query;
     let defaultProviderRadius = 1609 * 10; // 10 miles
     filterspageNum = filterspageNum || 0;
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
@@ -95,8 +97,11 @@ function providers(req, res, next) {
     }
     if (addtnlQuery) {
         addtnlQuery = JSON.parse(addtnlQuery);
-        let queryDate = (addtnlQuery.date) ? new Date(addtnlQuery.date) : new Date();
-        foodQuery['foodItems.availability'] = { $gte: queryDate }
+        if (onOrder === "false") {
+            let queryDate = (addtnlQuery.date) ? new Date(addtnlQuery.date) : new Date();
+            foodQuery['foodItems.availability'] = { $gte: queryDate };
+            foodQuery['foodItems.avalilabilityType'] = 'specificDates';
+        } else foodQuery['foodItems.avalilabilityType'] = 'onOrder';
         if (addtnlQuery.orderMode && addtnlQuery.orderMode.length > 0) {
             let orderModeQuery = {};
             switch (addtnlQuery.orderMode) {
@@ -118,28 +123,33 @@ function providers(req, res, next) {
             defaultProviderRadius = (addtnlQuery.providerRadius) ? addtnlQuery.providerRadius * 1609 : defaultProviderRadius;
         }
     }
-
     let userId = req.user;
     // user is logged in
     if (userId) {
         User.findById(userId, function(err, user) {
             let latitude, longitude;
-            if (user.userType === 'consumer') {
-                if (user.loc && user.loc.coordinates && user.loc.coordinates.length && user.loc.coordinates.length > 0 && user.loc.coordinates[0] != 0) {
-                    latitude = user.loc.coordinates[1];
-                    longitude = user.loc.coordinates[0];
+            if (user) {
+                if (user.userType === 'consumer') {
+                    if (user.loc && user.loc.coordinates && user.loc.coordinates.length && user.loc.coordinates.length > 0 && user.loc.coordinates[0] != 0) {
+                        latitude = user.loc.coordinates[1];
+                        longitude = user.loc.coordinates[0];
+                    } else {
+                        res.json({ error: 'NOADDRFND' });
+                        return;
+                    }
                 } else {
-                    res.json({ error: 'NOADDRFND' });
-                    return;
+                    // its a provider trying to look for food
+                    latitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[1];
+                    longitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[0];
                 }
+                combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, filterspageNum, function(err, results, stats) {
+                    res.json(results);
+                })
             } else {
-                // its a provider trying to look for food
-                latitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[1];
-                longitude = user.userSeachLocations[user.deliveryAddressIndex].coordinates[0];
+                res.status(404);
+                res.send("err");
             }
-            combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery, foodQuery, filterspageNum, function(err, results, stats) {
-                res.json(results);
-            })
+
         });
     } else {
         guestLocation = (guestLocation) ? JSON.parse(guestLocation) : undefined;

@@ -2,7 +2,7 @@ import User from '../models/user';
 import jwt from 'jwt-simple';
 import moment from 'moment';
 import config from '../../config/env/index'
-import { getLatAndLong, saveLocation } from '../helpers/geo'
+import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress } from '../helpers/geo'
 import async from 'async';
 
 /**
@@ -24,7 +24,12 @@ function createJWT(user) {
 function load(req, res) {
     const loggedInUser = req.user;
     User.findById(loggedInUser)
+        .lean()
         .exec(function(err, userAndFoodItems) {
+            // lets insert correct address
+            userAndFoodItems.searchText = getSearchAddress(userAndFoodItems).address;
+            userAndFoodItems.place_id = getSearchAddress(userAndFoodItems).place_id;
+            userAndFoodItems.displayAddress = getDisplayAddress(userAndFoodItems);
             res.json(userAndFoodItems)
         })
 }
@@ -47,15 +52,15 @@ function get(req, res) {
                         } else cb(err, user.reviewEligibleFoodItems)
                     })
             } else {
-                cb(null, null);
+                cb(new Error('user not logged in'), null);
             }
-
         },
         function getUserAndFoodItems(reviewEligibleFoodItems, cb) {
             User.findById(userId)
                 .populate('foodItems')
                 .lean()
                 .exec(function(err, userAndFoodItems) {
+
                     if (err) {
                         cb(err);
                     } else if (!userAndFoodItems) {
@@ -64,6 +69,12 @@ function get(req, res) {
                         // inside userAndFoodItems we have to discern whether the user can put a review
                         userAndFoodItems = JSON.parse(JSON.stringify(userAndFoodItems));
                         if (userAndFoodItems) {
+
+                            // lets insert correct address
+                            userAndFoodItems.searchText = getSearchAddress(userAndFoodItems).address;
+                            userAndFoodItems.place_id = getSearchAddress(userAndFoodItems).place_id;
+                            userAndFoodItems.displayAddress = getDisplayAddress(userAndFoodItems);
+
                             reviewEligibleFoodItems = reviewEligibleFoodItems || [];
                             userAndFoodItems.foodItems.forEach(function(foodItem, index) {
                                 // user is not logged in
@@ -88,7 +99,6 @@ function get(req, res) {
             res.send(err);
         } else res.json(result);
     });
-
 }
 
 /**
@@ -100,35 +110,40 @@ function get(req, res) {
 function create(req, res, next) {
     const keyForId = req.body.provider + 'UserID';
     User.findOne({
-        [keyForId]: req.body.userID
-    }, function(err, result) {
-        if (result) {
-            let alreadyPresentUser = result;
-            let token = createJWT(alreadyPresentUser);
-            res.send({
-                user: alreadyPresentUser,
-                token: token
-            });
-        } else {
-            const user = new User({
-                name: req.body.name,
-                email: req.body.email,
-                provider: req.body.provider,
-                img: (req.body.provider === 'fb') ? 'https://graph.facebook.com/' + req.body.userID + '/picture?type=small' : req.body.img,
-                [keyForId]: req.body.userID,
+            [keyForId]: req.body.userID
+        })
+        .lean()
+        .exec(function(err, result) {
+            if (result) {
+                let alreadyPresentUser = result;
+                let token = createJWT(alreadyPresentUser);
+                alreadyPresentUser.searchText = getSearchAddress(alreadyPresentUser).address;
+                alreadyPresentUser.place_id = getSearchAddress(alreadyPresentUser).place_id;
+                alreadyPresentUser.displayAddress = getDisplayAddress(alreadyPresentUser);
+                res.send({
+                    user: alreadyPresentUser,
+                    token: token
+                });
+            } else {
+                const user = new User({
+                    name: req.body.name,
+                    email: req.body.email,
+                    provider: req.body.provider,
+                    img: (req.body.provider === 'fb') ? 'https://graph.facebook.com/' + req.body.userID + '/picture?type=small' : req.body.img,
+                    [keyForId]: req.body.userID,
 
-            });
-            user.saveAsync()
-                .then((savedUser) => {
-                    let token = createJWT(savedUser);
-                    res.send({
-                        user: savedUser,
-                        token: token
-                    });
-                })
-                .error((e) => next(e));
-        }
-    })
+                });
+                user.saveAsync()
+                    .then((savedUser) => {
+                        let token = createJWT(savedUser);
+                        res.send({
+                            user: savedUser,
+                            token: token
+                        });
+                    })
+                    .error((e) => next(e));
+            }
+        })
 
 }
 

@@ -51,8 +51,8 @@ function orderSubmit(req, res) {
         },
         function sendEmailToProvider(savedOrder, cb) {
             let template = new EmailTemplate(path.join(templatesDir, 'order-submit-provider'));
-            req.body.orderConfirmUrl = "http://localhost:3000/order/" + savedOrder._id + "/" + savedOrder._creator + "/confirm/order-action";
-            req.body.orderCancelUrl = "http://localhost:3000/order/" + savedOrder._id + "/" + savedOrder._creator + "cancel/order-action";
+            req.body.orderConfirmUrl = "http://sample-env-2.brv2yyskaw.us-west-2.elasticbeanstalk.com/order/" + savedOrder._id + "/" + savedOrder._creator + "/confirm/order-action";
+            req.body.orderCancelUrl = "http://sample-env-2.brv2yyskaw.us-west-2.elasticbeanstalk.com/order/" + savedOrder._id + "/" + savedOrder._creator + "cancel/order-action";
             template.render(req.body, function(err, results) {
                 if (results && results.html) {
                     let mailOptions = {

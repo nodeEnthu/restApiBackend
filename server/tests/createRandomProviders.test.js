@@ -93,7 +93,7 @@ function providerFoodItemEntryFunc(index) {
             pickUpEndTime: "64800000",
             pickUpStartTime: "36000000",
             placeOrderBy: faker.random.arrayElement([0, 1, 2, 3]),
-            availability: [faker.date.between(today, sevenDaysAhead)],
+            availability: [faker.date.between(today, sevenDaysAhead),faker.date.between(today, sevenDaysAhead)],
             vegan: faker.random.boolean(),
             vegetarian: faker.random.boolean(),
             nondairy: faker.random.boolean(),
