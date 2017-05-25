@@ -4,7 +4,7 @@ import Review from '../models/review'
 import jwt from 'jwt-simple';
 import moment from 'moment';
 import config from '../../config/env/index'
-import { getLatAndLong, saveLocation } from '../helpers/geo'
+import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress } from '../helpers/geo'
 
 
 function register(req, res, next) {
@@ -39,9 +39,8 @@ function register(req, res, next) {
                     user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
                     user.description = userResponse.description;
                     user.email = userResponse.email,
-                    user.serviceOffered = serviceOfferedCode;
+                        user.serviceOffered = serviceOfferedCode;
                     user.addtnlComments = userResponse.addtnlComments;
-                    user.doYouDeliverFlag = userResponse.doYouDeliverFlag;
                     user.deliveryMinOrder = userResponse.deliveryMinOrder;
                     user.deliveryRadius = userResponse.deliveryRadius;
                     user.imgUrl = userResponse.imgUrl;
@@ -49,7 +48,7 @@ function register(req, res, next) {
                     // now we are ready to go to publish stage 2 .. so 2 instead of 1
                     user.publishStage = 2;
                     user.save(function(err, savedUser) {
-                        res.json(savedUser);
+                        res.json({ status: 'ok' });
                     })
                 }
             })
@@ -67,7 +66,7 @@ function publish(req, res, next) {
             user.published = true;
             user.publishStage = 3;
             user.save(function(err, savedUser) {
-                res.json(savedUser);
+                res.json({ status: 'ok' });
             })
         }
     });
@@ -86,7 +85,7 @@ function addOrEditFoodItem(req, res, next) {
             if (userResponse._id) {
                 // need to edit an existing food item
                 FoodItem.update({ _id: userResponse._id }, { $set: req.body }, { upsert: true, new: true }, function(err, foodItem) {
-                    res.json(foodItem);
+                    res.json({ status: 'ok' });
                 })
             } else {
                 // its a new item
@@ -100,7 +99,7 @@ function addOrEditFoodItem(req, res, next) {
                         user.foodItems.push(savedFooditem._id);
                         user.publishStage = req.body.publishStage;
                         user.save(function(err, savedUser) {
-                            res.json(savedFooditem);
+                            res.json({ status: 'ok' });
                         })
                     }
 

@@ -18,14 +18,16 @@ export function getLatAndLong(place_id, cb) {
                 let resolvedResponse = JSON.parse(body);
                 // take the first google recommendation .. i trust you google
                 let bestAddress = resolvedResponse.results[0];
+                let providerDisplayAddress = getProviderDisplayAddress(bestAddress);
                 return cb(null, {
                     latitude: bestAddress.geometry.location.lat,
                     longitude: bestAddress.geometry.location.lng,
-                    place_id: place_id
+                    place_id: place_id,
+                    providerDisplayAddress: providerDisplayAddress
                 })
             }
         })
-    } else{
+    } else {
         cb(new Error('place_id is a required arg'));
     }
 
@@ -45,6 +47,11 @@ export function saveLocation(user, result, place_id, address, action) {
             searchText: address
         };
     }
+    // now if user is in registration mode ... 
+    if (action === 'registerProvider') {
+        user.shortAddress = (user.keepAddressPrivateFlag) ? result.providerDisplayAddress : address;
+        user.fullAddress = address;
+    }
     // check whether the location already exists in userSeachLocations with place_id
     let locNotFound = true;
     let deliveryAddressIndex = 0
@@ -63,8 +70,103 @@ export function saveLocation(user, result, place_id, address, action) {
         };
         user.userSeachLocations.push(deliveryAddress);
         user.deliveryAddressIndex = user.userSeachLocations.length - 1;
-    } else{
+
+    } else {
         user.deliveryAddressIndex = deliveryAddressIndex;
     }
     return user;
+}
+
+export function getProviderDisplayAddress(result) {
+    const address = parseGeoLocationResults(result);
+    console.log(address);
+    var resultArr = [];
+    for (var key in address) {
+        if (address.hasOwnProperty(key)) {
+            if (address[key] === 'street_number') {
+                // dont do anything
+            } else if (address[key] && address[key].length > 0) {
+                resultArr.push(address[key]);
+            }
+        }
+    }
+    if (resultArr.length === 2) {
+        // dont do anything
+    } else if (resultArr.length === 3) {
+        // take last two city and state
+        resultArr.splice(0, 1);
+    } else {
+        // take last two city and state
+        resultArr.splice(0, 2);
+    }
+    return resultArr.join(', ');
+}
+
+export function getDisplayAddress(user) {
+    let address;
+    if (user.userType === 'provider') {
+        address = (user.keepAddressPrivateFlag) ? user.shortAddress : user.fullAddress;
+    } else if (user.userType === 'consumer') {
+        address = user.loc.searchText;
+    }
+    return address;
+}
+export function getSearchAddress(user) {
+    let address, place_id;
+    if (user.userType === 'provider') {
+        address = user.userSeachLocations[user.deliveryAddressIndex].searchText;
+        place_id = user.userSeachLocations[user.deliveryAddressIndex].place_id;
+    } else if (user.userType === 'consumer') {
+        address = user.loc.searchText;
+        place_id = user.loc.place_id;
+    }
+    return {
+        address: address,
+        placeId: place_id
+    }
+}
+
+
+function parseGeoLocationResults(result) {
+    const parsedResult = {}
+    const { address_components } = result;
+
+    for (var i = 0; i < address_components.length; i++) {
+        for (var b = 0; b < address_components[i].types.length; b++) {
+            if (address_components[i].types[b] == "street_number") {
+                //this is the object you are looking for
+                parsedResult.street_number = address_components[i].long_name;
+                break;
+            } else if (address_components[i].types[b] == "route") {
+                //this is the object you are looking for
+                parsedResult.street_name = address_components[i].long_name;
+                break;
+            } else if (address_components[i].types[b] == "sublocality_level_1") {
+                //this is the object you are looking for
+                parsedResult.sublocality_level_1 = address_components[i].long_name;
+                break;
+            } else if (address_components[i].types[b] == "sublocality_level_2") {
+                //this is the object you are looking for
+                parsedResult.sublocality_level_2 = address_components[i].long_name;
+                break;
+            } else if (address_components[i].types[b] == "sublocality_level_3") {
+                //this is the object you are looking for
+                parsedResult.sublocality_level_3 = address_components[i].long_name;
+                break;
+            } else if (address_components[i].types[b] == "neighborhood") {
+                //this is the object you are looking for
+                parsedResult.neighborhood = address_components[i].long_name;
+                break;
+            } else if (address_components[i].types[b] == "locality") {
+                //this is the object you are looking for
+                parsedResult.city = address_components[i].short_name;
+                break;
+            } else if (address_components[i].types[b] == "administrative_area_level_1") {
+                //this is the object you are looking for
+                parsedResult.state = address_components[i].short_name;
+                break;
+            }
+        }
+    }
+    return parsedResult;
 }
