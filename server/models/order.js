@@ -16,7 +16,22 @@ var Order_Schema = new mongoose.Schema({
     customerAddress: String,
     customerEmailId: String,
     providerEmailId: String,
+    /*
+    * This is from the customer at the timeorder is placed
+    */
     addtnlAddressInfo:String,
+    /*
+    * This is from the provider at the timeorder is confirmed
+    */
+    providerAddtnlInfo:String,
+    /*
+    * This is set to true if provider made changes at the time of confirmation
+    */
+    updatedByProvider:{type:Boolean, default:false},
+    /*
+    * This is by provider .. 1 = confirmed , 0 = cancelled , 2 = no action taken
+    */
+    status:{type:Number, default:2},
     orderType: String,
     subTotal: String,
     modeOfPayment: String,

@@ -118,7 +118,7 @@ export function getSearchAddress(user) {
     }
     return {
         address: address,
-        placeId: place_id
+        place_id: place_id
     }
 }
 
