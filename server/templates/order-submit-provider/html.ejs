@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>A new recommendation from your Kaiser Permanitle</title>
+    <title>Congratulations! you got an order</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -149,7 +149,7 @@
 <body style="margin: 0 !important; padding: 0 !important;">
     <!-- HIDDEN PREHEADER TEXT -->
     <div style="display: none; font-size: 1px; color: #fefefe; line-height: 1px; font-family: Arial, sans-serif; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">
-        Entice the open with some amazing preheader text. Use a little mystery and get those subscribers to read through...
+        Get more business by taking quick actions on your orders !
     </div>
     <!-- HEADER -->
     <table border="0" cellpadding="0" cellspacing="0" width="100%">
@@ -167,8 +167,7 @@
                             <table width="100%" border="0" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td class="padding" align="left">
-                                        <a href="https://mydoctor.kaiserpermanente.org" target="_blank">
-                                            <!-- This image will be published to prod with 8.8. In the meantime, you can point the src to QA, but remember to point it back to prod, before committing. -->
+                                        <a href="http://sample-env-2.brv2yyskaw.us-west-2.elasticbeanstalk.com/" target="_blank">
                                             <img src="http://static2.crated.com/wTTDdL6KhNnuUbjESfVrsihY_y4=/fit-in/960x960/filters:quality(90)/crated/thumbs/art/2016/07/07/9c264a12f601a113903f457347e2081b/960.jpg" width="76" height="80" border="0" alt="The Permanente Medical Group" style="display: block; color: #666666;  font-family: Arial, sans-serif; font-size: 16px;" class="img-max">
                                         </a>
                                     </td>
@@ -195,7 +194,7 @@
                                                             <tbody>
                                                                 <tr>
                                                                     <td style="padding:10px 0;color:#686b6e;font-size:12px;border-bottom:1px solid #d9dbe5">From</td>
-                                                                    <td style="padding:10px 0;color:#2b2c2f;font-size:13px;text-align:right;border-bottom:1px solid #d9dbe5"><%=providerName%></td>
+                                                                    <td style="padding:10px 0;color:#2b2c2f;font-size:13px;text-align:right;border-bottom:1px solid #d9dbe5"><%=customerName%></td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -212,6 +211,7 @@
                                                                     <th colspan="2" style="padding:10px 0 0;text-align:left">Item</th>
                                                                     <th style="width:25px;padding:10px 0 0;text-align:center">Qty</th>
                                                                     <th style="width:40px;padding:10px 0 0;text-align:right">Price</th>
+                                                                    <th style="width:40px;padding:10px 0 0;text-align:right">Date</th>
                                                                 </tr>
                                                                 <%for(var key in itemsCheckedOut){
                                                                     if(itemsCheckedOut.hasOwnProperty(key)){
@@ -224,14 +224,15 @@
                                                                         </td>
                                                                         <td style="padding:10px 0;text-align:left;border-bottom:1px dotted #d9dbe5;vertical-align:top"><b style="color:#2b2c2f;font-size:15px"><%=itemCheckedOut.name%></b>
                                                                             <p style="margin:10px 0 0;color:#9b9e9f">
-                                                                                <b>Additional Comments</b>: Regular
+                                                                                <b>Additional Comments</b>: <%=itemCheckedOut.addtnlItemOrderInfo%>
                                                                                 <br>
-                                                                                <b>Choice of Sauce</b>: Pizza
                                                                             </p>
                                                                         </td>
                                                                         <td style="padding:10px 0 10px 7px;color:#60636a;text-align:center;border-bottom:1px dotted #d9dbe5;vertical-align:top"><%=itemCheckedOut.quantity%>
                                                                         </td>
                                                                         <td style="padding:10px 0 10px 7px;color:#60636a;text-align:right;border-bottom:1px dotted #d9dbe5;vertical-align:top">$<%=itemCheckedOut.price%>
+                                                                        </td>
+                                                                        <td style="padding:10px 0 10px 7px;color:#60636a;text-align:right;border-bottom:1px dotted #d9dbe5;vertical-align:top"><%=itemCheckedOut.orderDate%>
                                                                         </td>
                                                                     </tr>
                                                                 <%  }
@@ -245,10 +246,6 @@
                                                                                     <td style="width:20%;padding:4px 0">$<%=subTotal%></td>
                                                                                 </tr>
                                                                                 <tr>
-                                                                                    <td style="padding:4px 0">Tip</td>
-                                                                                    <td style="padding:4px 0">$<%=tip%></td>
-                                                                                </tr>
-                                                                                <tr>
                                                                                     <td style="padding:4px 0">Tax</td>
                                                                                     <td style="padding:4px 0">tbd (provider)</td>
                                                                                 </tr>
@@ -258,10 +255,6 @@
                                                                                         <td style="padding:4px 0">tbd (provider)</td>
                                                                                     </tr>
                                                                                 <%}%>
-                                                                                <tr>
-                                                                                    <td style="padding:4px 0">Pay by:</td>
-                                                                                    <td style="padding:4px 0"><%=modeOfPayment%></td>
-                                                                                </tr>
                                                                                 <tr>
                                                                                     <td style="padding:4px 0">Total</td>
                                                                                     <td style="padding:4px 0">$<%=subTotal + ' taxes'%></td>
@@ -278,18 +271,6 @@
                                         </table>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td style="padding:0">
-                                        <table style="width:100%;border-spacing:0;font-family:Helvetica,Arial,sans-serif">
-                                            <tbody>
-                                                <tr>
-                                                    <td style="padding:10px 0;color:#686b6e;font-size:12px;border-bottom:1px solid #d9dbe5">From</td>
-                                                    <td style="padding:10px 0;color:#2b2c2f;font-size:13px;text-align:right;border-bottom:1px solid #d9dbe5">snowy mountains</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </td>
-                                </tr>
                                  <tr>
                                     <td align="center">
                                         <!-- BULLETPROOF BUTTON -->
@@ -298,24 +279,7 @@
                                                 <td align="center" style="padding-top: 25px;" class="padding">
                                                     <table border="0" cellspacing="0" cellpadding="0" class="mobile-button-container">
                                                         <tr>
-                                                            <td align="center" style="border-radius: 3px;" bgcolor="#00cc00"><a href="<%=orderConfirmUrl%>" target="_blank" style="font-size: 16px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; border-radius: 3px; padding: 15px 125px; border: 1px solid #256F9C; display: inline-block;" class="mobile-button">Confirm</a></td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                               
-                                <tr>
-                                    <td align="center">
-                                        <!-- BULLETPROOF BUTTON -->
-                                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                            <tr>
-                                                <td align="center" style="padding-top: 25px;" class="padding">
-                                                    <table border="0" cellspacing="0" cellpadding="0" class="mobile-button-container">
-                                                        <tr>
-                                                            <td align="center" style="border-radius: 3px;" bgcolor="#f4700a"><a href= "<%=orderCancelUrl%>" target="_blank" style="font-size: 16px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; border-radius: 3px; padding: 15px 125px;  display: inline-block;" class="mobile-button">Cancel</a></td>
+                                                            <td align="center" bgcolor="#FF6F00"><a href="<%=orderActionUrl%>" target="_blank" style="font-size: 16px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; border-radius: 3px; padding: 15px 125px; display: inline-block;" class="mobile-button">Take Action</a></td>
                                                         </tr>
                                                     </table>
                                                 </td>

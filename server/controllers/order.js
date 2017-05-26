@@ -5,7 +5,7 @@ import email_templates from 'email-templates';
 import sesTransport from 'nodemailer-ses-transport';
 import Order from '../models/order';
 import User from '../models/user';
-
+import moment from 'moment';
 
 const transport = nodemailer.createTransport(sesTransport({
     "accessKeyId": "AKIAISGDIT6QWWGXAEPA",
@@ -51,15 +51,20 @@ function orderSubmit(req, res) {
         },
         function sendEmailToProvider(savedOrder, cb) {
             let template = new EmailTemplate(path.join(templatesDir, 'order-submit-provider'));
-            req.body.orderConfirmUrl = "http://sample-env-2.brv2yyskaw.us-west-2.elasticbeanstalk.com/order/" + savedOrder._id + "/" + savedOrder._creator + "/confirm/order-action";
-            req.body.orderCancelUrl = "http://sample-env-2.brv2yyskaw.us-west-2.elasticbeanstalk.com/order/" + savedOrder._id + "/" + savedOrder._creator + "cancel/order-action";
+            req.body.orderActionUrl = "http://sample-env-2.brv2yyskaw.us-west-2.elasticbeanstalk.com/order/" + savedOrder._id + "/" + savedOrder._creator + "/confirm/order-action";
+            req.body.orderId = savedOrder._id
+            for (var key in req.body.itemsCheckedOut) {
+                if (req.body.itemsCheckedOut.hasOwnProperty(key)) {
+                    req.body.itemsCheckedOut[key].orderDate = moment(req.body.itemsCheckedOut[key].orderDate).format("ddd, MMM Do")
+                }
+            }
             template.render(req.body, function(err, results) {
                 if (results && results.html) {
                     let mailOptions = {
                         from: '"fillurtummy 👥"<autoenthu@gmail.com>', // sender address
                         // to: req.body.customerEmailId + ', ' + req.body.providerEmailId, // list of receivers
                         to: req.body.providerEmailId,
-                        subject: 'Your order', // Subject line
+                        subject: 'You reveived an order', // Subject line
                         html: results.html, // html body
                     };
                     transport.sendMail(mailOptions, function(error, info) {
@@ -80,20 +85,26 @@ function orderSubmit(req, res) {
 }
 
 function orderConfirmCustomer(req, res) {
-    const { orderId } = req.body;
+    const confirmedOrder = req.body;
     async.waterfall([
             function findOrder(cb) {
-                Order.findById(orderId, function(err, order) {
+                Order.findById(confirmedOrder._id, function(err, order) {
                     if (order) {
                         if (order.mailSentToCustomer) {
                             cb({ message: "email already sent" }, null);
                         } else {
+                            // let overwite the props that provider can overwrite
+                            order.providerAddress = confirmedOrder.providerAddress;
+                            order.providerAddtnlInfo = confirmedOrder.providerAddtnlInfo;
+                            order.updatedByProvider = confirmedOrder.updatedByProvider;
+                            //done
+                            order.status = 1;
                             order.mailSentToCustomer = true;
                             order.save(function(err, savedOrder) {
                                 cb(null, savedOrder);
                             });
                         }
-                    } else cb(err || { message: "order id " + orderId + "  not found" });
+                    } else cb(err || { message: "order id " + order_id + "  not found" });
 
                 });
             },
@@ -121,7 +132,6 @@ function orderConfirmCustomer(req, res) {
             },
             function sendEmailToCustomer(savedOrder, cb) {
                 let resolvedSavedOrder = JSON.parse(JSON.stringify(savedOrder));
-                resolvedSavedOrder.orderType = 'delivery'; // hardcoded for now
                 let template = new EmailTemplate(path.join(templatesDir, 'order-confirmed-customer'));
                 template.render(resolvedSavedOrder, function(err, results) {
                     if (results && results.html) {
@@ -160,6 +170,7 @@ function orderCancelCustomer(req, res) {
                             cb({ message: "email already sent" }, null);
                         } else {
                             order.mailSentToCustomer = true;
+                            order.status = 0;
                             order.save(function(err, savedOrder) {
                                 cb(null, savedOrder);
                             });
@@ -214,4 +225,13 @@ function get(req, res) {
     }
 
 }
-export default { orderSubmit, orderConfirmCustomer, get, orderCancelCustomer }
+
+function load(req, res) {
+    const orderId = req.param('orderId');
+    Order.findById(orderId, function(err, order) {
+        res.json(order);
+    })
+}
+
+
+export default { orderSubmit, orderConfirmCustomer, get, orderCancelCustomer, load }

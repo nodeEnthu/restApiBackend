@@ -13,6 +13,10 @@ router.route('/:orderId/orderCancelCustomer')
 	// POST /api/order/325123132/orderConfirmCustomer
 	.post(order.orderCancelCustomer);
 router.route('/:userId/:role/get')
-	// GET /api/order/:userId/:role/get
+	// GET /api/:userId/:role/get
 	.get(order.get);
+router.route('/:orderId')
+	// GET /api/order/:orderId
+	.get(order.load);
+
 export default router; 
