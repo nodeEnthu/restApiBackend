@@ -12,6 +12,7 @@ function register(req, res, next) {
     const userResponse = req.body;
     const loggedInUser = req.user;
     const { searchText, place_id } = userResponse;
+    console.log('register ',searchText)
     let serviceOfferedCode;
     switch (userResponse.serviceOffered) {
         case "pickup":
@@ -39,7 +40,7 @@ function register(req, res, next) {
                     user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
                     user.description = userResponse.description;
                     user.email = userResponse.email,
-                        user.serviceOffered = serviceOfferedCode;
+                    user.serviceOffered = serviceOfferedCode;
                     user.addtnlComments = userResponse.addtnlComments;
                     user.deliveryMinOrder = userResponse.deliveryMinOrder;
                     user.deliveryRadius = userResponse.deliveryRadius;

@@ -21,6 +21,10 @@ router.route('/:userId')
     /** GET /api/users/:userId - Get user */
     .get(checkLogin,userCtrl.get)
 
+router.route('/:userId/profileEdit')
+    /** GET /api/users/:userId/profileEdit - Get user */
+    .get(ensureAuthenticated,userCtrl.profileEdit)
+
 /** PUT /api/users/:userId - Update user */
 .put(validate(paramValidation.updateUser), userCtrl.update)
 

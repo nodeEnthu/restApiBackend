@@ -79,7 +79,6 @@ export function saveLocation(user, result, place_id, address, action) {
 
 export function getProviderDisplayAddress(result) {
     const address = parseGeoLocationResults(result);
-    console.log(address);
     var resultArr = [];
     for (var key in address) {
         if (address.hasOwnProperty(key)) {
@@ -88,11 +87,10 @@ export function getProviderDisplayAddress(result) {
             }
         }
     }
-    let hasStreetNumber = (address["street_number"])? true: false;
-    if (resultArr.length === 2) {
-    } else if (resultArr.length === 3) {
+    let hasStreetNumber = (address["street_number"]) ? true : false;
+    if (resultArr.length === 2) {} else if (resultArr.length === 3) {
         resultArr.splice(0, 1);
-    } else if(!hasStreetNumber && resultArr.length === 4) {
+    } else if (!hasStreetNumber && resultArr.length === 4) {
         resultArr.splice(0, 1);
     } else resultArr.splice(0, 2);
     return resultArr.join(', ');
@@ -107,6 +105,7 @@ export function getDisplayAddress(user) {
     }
     return address;
 }
+
 export function getSearchAddress(user) {
     let address, place_id;
     if (user.userType === 'provider') {
@@ -116,6 +115,15 @@ export function getSearchAddress(user) {
         address = user.loc.searchText;
         place_id = user.loc.place_id;
     }
+    return {
+        address: address,
+        place_id: place_id
+    }
+}
+export function getProviderAddress(user) {
+    let address, place_id;
+    address = user.loc.searchText;
+    place_id = user.loc.place_id;
     return {
         address: address,
         place_id: place_id
