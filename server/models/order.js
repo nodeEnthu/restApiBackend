@@ -16,6 +16,8 @@ var Order_Schema = new mongoose.Schema({
     customerAddress: String,
     customerEmailId: String,
     providerEmailId: String,
+    cancelReason:Number,
+    cancelText:String,
     /*
     * This is from the customer at the timeorder is placed
     */
@@ -32,6 +34,7 @@ var Order_Schema = new mongoose.Schema({
     * This is by provider .. 1 = confirmed , 0 = cancelled , 2 = no action taken
     */
     status:{type:Number, default:2},
+    orderTime:String,
     orderType: String,
     subTotal: String,
     modeOfPayment: String,

@@ -168,7 +168,7 @@
                                 <tr>
                                     <td class="padding" align="left">
                                         <a href="http://sample-env-2.brv2yyskaw.us-west-2.elasticbeanstalk.com/" target="_blank">
-                                            <img src="http://static2.crated.com/wTTDdL6KhNnuUbjESfVrsihY_y4=/fit-in/960x960/filters:quality(90)/crated/thumbs/art/2016/07/07/9c264a12f601a113903f457347e2081b/960.jpg" width="76" height="80" border="0" alt="The Permanente Medical Group" style="display: block; color: #666666;  font-family: Arial, sans-serif; font-size: 16px;" class="img-max">
+                                            <img src="http://static2.crated.com/wTTDdL6KhNnuUbjESfVrsihY_y4=/fit-in/960x960/filters:quality(90)/crated/thumbs/art/2016/07/07/9c264a12f601a113903f457347e2081b/960.jpg" width="76" height="80" border="0" alt="Clickjack-ie" style="display: block; color: #666666;  font-family: Arial, sans-serif; font-size: 16px;" class="img-max">
                                         </a>
                                     </td>
                                 </tr>
@@ -181,7 +181,15 @@
                                                         <table style="width:100%;background:#858a8d;border-spacing:0;font-family:Helvetica,Arial,sans-serif">
                                                             <tbody>
                                                                 <tr>
-                                                                    <td style="padding:3px 0 3px 6px;color:#ffffff;font-size:15px;font-weight:bold;text-transform:uppercase"><%=orderType%><span class="il">order</span></td>
+                                                                    <td style="padding:3px 0 3px 6px;color:#ffffff;font-size:15px;font-weight:bold;text-transform:uppercase">
+                                                                            <%=orderType%>
+                                                                        <span class="il">
+                                                                            order at
+                                                                        </span>
+                                                                        <span>
+                                                                            <%=orderTime%>
+                                                                        </span>
+                                                                    </td>
                                                                     <td style="padding:3px 6px 3px 0;color:#dfe0e1;font-size:12px;text-align:right"><%=orderId%></td>
                                                                 </tr>
                                                             </tbody>
@@ -193,9 +201,41 @@
                                                         <table style="width:100%;border-spacing:0;font-family:Helvetica,Arial,sans-serif">
                                                             <tbody>
                                                                 <tr>
-                                                                    <td style="padding:10px 0;color:#686b6e;font-size:12px;border-bottom:1px solid #d9dbe5">From</td>
-                                                                    <td style="padding:10px 0;color:#2b2c2f;font-size:13px;text-align:right;border-bottom:1px solid #d9dbe5"><%=customerName%></td>
+                                                                    <td style="padding:10px 0;color:#686b6e;font-size:12px;border-bottom:1px solid #d9dbe5">
+                                                                        From
+                                                                    </td>
+                                                                    <td style="padding:10px 0;color:#2b2c2f;font-size:13px;text-align:right;border-bottom:1px solid #d9dbe5">
+                                                                        <%=customerName%>
+                                                                    </td>
                                                                 </tr>
+                                                                <tr>
+                                                                    <td style="padding:10px 0;color:#686b6e;font-size:12px;border-bottom:1px solid #d9dbe5">
+                                                                        Email:
+                                                                    </td>
+                                                                    <td style="padding:10px 0;color:#2b2c2f;font-size:13px;text-align:right;border-bottom:1px solid #d9dbe5">
+                                                                        <%=customerEmailId%>
+                                                                    </td>
+                                                                </tr>
+                                                                <%if(orderType==='Delivery'){%>
+                                                                    <tr>
+                                                                        <td style="padding:10px 0;color:#686b6e;font-size:12px;border-bottom:1px solid #d9dbe5">
+                                                                            Delivery Address
+                                                                        </td>
+                                                                        <td style="padding:10px 0;color:#2b2c2f;font-size:13px;text-align:right;border-bottom:1px solid #d9dbe5">
+                                                                                <%=customerAddress%>
+                                                                        </td>
+                                                                    </tr>
+                                                                <%}%>
+                                                                <%if(orderType==='Delivery' && addtnlAddressInfo){%>
+                                                                    <tr>
+                                                                        <td style="padding:10px 0;color:#686b6e;font-size:12px;border-bottom:1px solid #d9dbe5">
+                                                                            Customer remarks
+                                                                        </td>
+                                                                        <td style="padding:10px 0;color:#2b2c2f;font-size:13px;text-align:right;border-bottom:1px solid #d9dbe5">
+                                                                            <%=addtnlAddressInfo%>
+                                                                        </td>
+                                                                    </tr>
+                                                                <%}%>
                                                             </tbody>
                                                         </table>
                                                     </td>
@@ -245,20 +285,12 @@
                                                                                     <td style="padding:4px 0">Subtotal</td>
                                                                                     <td style="width:20%;padding:4px 0">$<%=subTotal%></td>
                                                                                 </tr>
-                                                                                <tr>
-                                                                                    <td style="padding:4px 0">Tax</td>
-                                                                                    <td style="padding:4px 0">tbd (provider)</td>
-                                                                                </tr>
                                                                                 <%if(orderType==='delivery'){%>
                                                                                     <tr>
                                                                                         <td style="padding:4px 0">Delivery charge</td>
                                                                                         <td style="padding:4px 0">tbd (provider)</td>
                                                                                     </tr>
                                                                                 <%}%>
-                                                                                <tr>
-                                                                                    <td style="padding:4px 0">Total</td>
-                                                                                    <td style="padding:4px 0">$<%=subTotal + ' taxes'%></td>
-                                                                                </tr>
                                                                             </tbody>
                                                                         </table>
                                                                     </td>

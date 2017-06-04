@@ -60,7 +60,10 @@ const UserSchema = new mongoose.Schema({
     keepAddressPrivateFlag: { type: Boolean, default: false },
     description: String,
     deliveryRadius: String,
-    deliveryMinOrder: String
+    deliveryMinOrder: String,
+    ordersReceived:{ type: Number, default: 0 },
+    ordersConfirmed:{ type: Number, default: 0 },
+    ordersCancelled:{ type: Number, default: 0 }
 }, { collection: 'users', timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 /**

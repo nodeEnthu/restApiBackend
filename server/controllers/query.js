@@ -19,7 +19,7 @@ function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery
                 "distanceField": "distance",
                 "maxDistance": defaultProviderRadius,
                 "spherical": true,
-                "distanceMultiplier": 0.000621371,
+                "distanceMultiplier": 0.000625371,
                 "query": providerQuery
             }
         }, {

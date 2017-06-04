@@ -2,7 +2,7 @@ import User from '../models/user';
 import jwt from 'jwt-simple';
 import moment from 'moment';
 import config from '../../config/env/index'
-import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress } from '../helpers/geo'
+import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress, getProviderAddress } from '../helpers/geo'
 import async from 'async';
 
 /**
@@ -23,13 +23,37 @@ function createJWT(user) {
  */
 function load(req, res) {
     const loggedInUser = req.user;
+    if (loggedInUser) {
+        User.findById(loggedInUser)
+            .lean()
+            .exec(function(err, userAndFoodItems) {
+                // lets insert correct address
+                if (err || !userAndFoodItems) {
+                    res.send(err);
+                } else {
+                    userAndFoodItems.searchText = getSearchAddress(userAndFoodItems).address;
+                    userAndFoodItems.place_id = getSearchAddress(userAndFoodItems).place_id;
+                    userAndFoodItems.displayAddress = getDisplayAddress(userAndFoodItems);
+                    res.json(userAndFoodItems);
+                }
+            })
+    } else {
+        res.json({});
+    }
+
+}
+
+/**
+ * Load user and append to req.
+ */
+function profileEdit(req, res) {
+    const loggedInUser = req.user;
     User.findById(loggedInUser)
         .lean()
         .exec(function(err, userAndFoodItems) {
             // lets insert correct address
-            userAndFoodItems.searchText = getSearchAddress(userAndFoodItems).address;
-            userAndFoodItems.place_id = getSearchAddress(userAndFoodItems).place_id;
-            userAndFoodItems.displayAddress = getDisplayAddress(userAndFoodItems);
+            userAndFoodItems.searchText = getProviderAddress(userAndFoodItems).address;
+            userAndFoodItems.place_id = getProviderAddress(userAndFoodItems).place_id;
             res.json(userAndFoodItems)
         })
 }
@@ -41,9 +65,10 @@ function load(req, res) {
 function get(req, res) {
     const userId = req.params.userId;
     const loggedInUser = req.user || '';
+    console.log('userId',userId,loggedInUser)
     async.waterfall([
         function getreviewEligibleItems(cb) {
-            if (loggedInUser && loggedInUser != '') {
+            if (loggedInUser) {
                 User.findById(loggedInUser)
                     .lean()
                     .exec(function(err, user) {
@@ -51,16 +76,13 @@ function get(req, res) {
                             cb(new Error("no user found"));
                         } else cb(err, user.reviewEligibleFoodItems)
                     })
-            } else {
-                cb(new Error('user not logged in'), null);
-            }
+            } else cb(null, [])
         },
         function getUserAndFoodItems(reviewEligibleFoodItems, cb) {
             User.findById(userId)
                 .populate('foodItems')
                 .lean()
                 .exec(function(err, userAndFoodItems) {
-
                     if (err) {
                         cb(err);
                     } else if (!userAndFoodItems) {
@@ -71,10 +93,7 @@ function get(req, res) {
                         if (userAndFoodItems) {
 
                             // lets insert correct address
-                            userAndFoodItems.searchText = getSearchAddress(userAndFoodItems).address;
-                            userAndFoodItems.place_id = getSearchAddress(userAndFoodItems).place_id;
                             userAndFoodItems.displayAddress = getDisplayAddress(userAndFoodItems);
-
                             reviewEligibleFoodItems = reviewEligibleFoodItems || [];
                             userAndFoodItems.foodItems.forEach(function(foodItem, index) {
                                 // user is not logged in
@@ -186,4 +205,4 @@ function remove(req, res, next) {
         .error((e) => next(e));
 }
 
-export default { load, get, create, update, list, remove };
+export default { load, get, create, update, list, remove, profileEdit };

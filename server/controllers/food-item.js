@@ -20,7 +20,7 @@ function review(req, res, next) {
                     foodItem.reviews.push(savedReview._id);
                     const numberOfReviews = foodItem.reviews.length;
                     foodItem.reviewers.push(creatorId);
-                    const newRating = (savedReview.rating + parseInt(foodItem.rating) * (numberOfReviews - 1)) / numberOfReviews; // taking the mean
+                    const newRating = (parseInt(savedReview.rating) + foodItem.rating * (numberOfReviews - 1)) / numberOfReviews; // taking the mean
                     foodItem.rating = newRating;
                     foodItem.numOfReviews = numberOfReviews;
                     foodItem.save(function(err, savedFooditem) {

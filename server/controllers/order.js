@@ -70,8 +70,19 @@ function orderSubmit(req, res) {
                     transport.sendMail(mailOptions, function(error, info) {
                         cb(error, savedOrder);
                     });
-                } else cb(err);
+                } else cb(err, savedOrder);
             });
+        },
+        function incrementProviderOrderCount(savedOrder,cb){
+            User.findById(savedOrder._providerId)
+                .exec(function(err,user){
+                    if(user){
+                        user.ordersReceived = user.ordersReceived +1;
+                        user.save(); // hopefully it should be saved
+                    }
+                    
+                    cb(err,savedOrder);
+                })
         }
     ], function(err, savedOrder) {
         if (err) {
@@ -132,13 +143,20 @@ function orderConfirmCustomer(req, res) {
             },
             function sendEmailToCustomer(savedOrder, cb) {
                 let resolvedSavedOrder = JSON.parse(JSON.stringify(savedOrder));
+                resolvedSavedOrder.orderId = savedOrder._id
+                resolvedSavedOrder.providerAddtnlInfo = savedOrder.providerAddtnlInfo || '';
+                for (var key in resolvedSavedOrder.itemsCheckedOut) {
+                    if (resolvedSavedOrder.itemsCheckedOut.hasOwnProperty(key)) {
+                        resolvedSavedOrder.itemsCheckedOut[key].orderDate = moment(resolvedSavedOrder.itemsCheckedOut[key].orderDate).format("ddd, MMM Do")
+                    }
+                }
                 let template = new EmailTemplate(path.join(templatesDir, 'order-confirmed-customer'));
                 template.render(resolvedSavedOrder, function(err, results) {
                     if (results && results.html) {
                         let mailOptions = {
                             from: '"fillurtummy 👥"<autoenthu@gmail.com>', // sender address
                             to: resolvedSavedOrder.customerEmailId,
-                            subject: 'Your confirmed order', // Subject line
+                            subject: 'Awwright! '+resolvedSavedOrder.providerName+ ' approved your order', // Subject line
                             html: results.html, // html body
                         };
                         transport.sendMail(mailOptions, function(error, info) {
@@ -146,6 +164,16 @@ function orderConfirmCustomer(req, res) {
                         });
                     } else cb(err);
                 });
+            },
+            function incrementProviderConfimCount(savedOrder,cb){
+                User.findById(savedOrder._providerId)
+                    .exec(function(err,user){
+                        if(user){
+                            user.ordersConfirmed = user.ordersConfirmed +1;
+                            user.save();
+                        }
+                        cb(err,savedOrder);
+                    })
             }
         ],
         function(err, savedOrder) {
@@ -161,34 +189,68 @@ function orderConfirmCustomer(req, res) {
 }
 
 function orderCancelCustomer(req, res) {
-    const { orderId } = req.body;
+    const cancelledOrder = req.body;
     async.waterfall([
             function findOrder(cb) {
-                Order.findById(orderId, function(err, order) {
+                Order.findById(cancelledOrder._id, function(err, order) {
                     if (order) {
                         if (order.mailSentToCustomer) {
                             cb({ message: "email already sent" }, null);
                         } else {
+                            // let overwite the props that provider can overwrite
+                            order.providerAddress = cancelledOrder.providerAddress;
+                            order.providerAddtnlInfo = cancelledOrder.providerAddtnlInfo;
+                            order.updatedByProvider = cancelledOrder.updatedByProvider;
+                            order.cancelReason = cancelledOrder.cancelReason;
+                            
                             order.mailSentToCustomer = true;
                             order.status = 0;
+
+                            const CANCEL_REASONS = [
+                                { value: 1, label: 'Sold out' },
+                                { value: 2, label: 'User pickup/delivery time is not acceptable' },
+                                { value: 3, label: 'User address is out of delivery area' },
+                                { value: 4, label: 'Unknown/incomplete user address for delivery' },
+                                { value: 5, label: 'Questions about customer authenticity' },
+                                { value: 6, label: 'Other' }
+                            ];
+                            if (cancelledOrder.cancelReason === 6) {
+                                order.cancelText = cancelledOrder.cancelText ;
+                            } else {
+                                CANCEL_REASONS.forEach(function(cancelReason) {
+                                    if (cancelReason.value === order.cancelReason) {
+                                        order.cancelText = cancelReason.label;
+                                    }
+                                })
+                            }
                             order.save(function(err, savedOrder) {
                                 cb(null, savedOrder);
                             });
                         }
-                    } else cb(err || { message: "order id " + orderId + "  not found" });
+                    } else cb(err || { message: "order id  not found" });
 
                 });
             },
             function sendEmailToCustomer(savedOrder, cb) {
                 let resolvedSavedOrder = JSON.parse(JSON.stringify(savedOrder));
-                resolvedSavedOrder.orderType = 'delivery'; // hardcoded for now
+                resolvedSavedOrder.orderId = savedOrder._id
+                resolvedSavedOrder.providerAddtnlInfo = savedOrder.providerAddtnlInfo || '';
+
                 let template = new EmailTemplate(path.join(templatesDir, 'order-cancel-customer'));
+                for (var key in resolvedSavedOrder.itemsCheckedOut) {
+                    if (resolvedSavedOrder.itemsCheckedOut.hasOwnProperty(key)) {
+                        resolvedSavedOrder.itemsCheckedOut[key].orderDate = moment(resolvedSavedOrder.itemsCheckedOut[key].orderDate).format("ddd, MMM Do")
+                    }
+                }
                 template.render(resolvedSavedOrder, function(err, results) {
+                    if(err){
+                        console.log(err) 
+                    }
                     if (results && results.html) {
                         let mailOptions = {
                             from: '"fillurtummy 👥"<autoenthu@gmail.com>', // sender address
                             to: resolvedSavedOrder.customerEmailId,
-                            subject: 'Order cancelled!', // Subject line
+                            subject: 'Oops! '+resolvedSavedOrder.providerName+ ' cancelled your order', // Subject line
                             html: results.html, // html body
                         };
                         transport.sendMail(mailOptions, function(error, info) {
@@ -196,6 +258,17 @@ function orderCancelCustomer(req, res) {
                         });
                     } else cb(err);
                 });
+            },
+            function incrementProviderCancelCount(savedOrder,cb){
+                User.findById(savedOrder._providerId)
+                    .exec(function(err,user){
+                        if(user){
+                            user.ordersCancelled = user.ordersCancelled +1;
+                            user.save(); // hopefully it should be saved
+                        }
+                        
+                        cb(err,savedOrder);
+                    })
             }
         ],
         function(err, savedOrder) {
@@ -219,7 +292,7 @@ function get(req, res) {
             res.json(orders);
         })
     } else if (role === 'provider') {
-        Order.find({ _providerId: userId }, function(err, orders) {
+        Order.find({ _providerId: userId }, {}, { sort: { 'created_at': -1 } }, function(err, orders) {
             res.json(orders);
         })
     }
