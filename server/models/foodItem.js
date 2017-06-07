@@ -21,6 +21,7 @@ var FoodItem_Schema = new mongoose.Schema({
     pickUpStartTime:String,
     pickUpEndTime:String,
     price:Number,
+    displayPrice:String,
     cuisineType:String,
     organic:Boolean,
     vegetarian:Boolean,

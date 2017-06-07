@@ -63,7 +63,10 @@ const UserSchema = new mongoose.Schema({
     deliveryMinOrder: String,
     ordersReceived:{ type: Number, default: 0 },
     ordersConfirmed:{ type: Number, default: 0 },
-    ordersCancelled:{ type: Number, default: 0 }
+    ordersCancelled:{ type: Number, default: 0 },
+    state:String,
+    country:String,
+    currency:String
 }, { collection: 'users', timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 /**

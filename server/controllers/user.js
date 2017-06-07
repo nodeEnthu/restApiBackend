@@ -65,7 +65,6 @@ function profileEdit(req, res) {
 function get(req, res) {
     const userId = req.params.userId;
     const loggedInUser = req.user || '';
-    console.log('userId',userId,loggedInUser)
     async.waterfall([
         function getreviewEligibleItems(cb) {
             if (loggedInUser) {

@@ -61,10 +61,10 @@ function orderSubmit(req, res) {
             template.render(req.body, function(err, results) {
                 if (results && results.html) {
                     let mailOptions = {
-                        from: '"fillurtummy 👥"<autoenthu@gmail.com>', // sender address
+                        from: '"Calljack-ie 👥"<autoenthu@gmail.com>', // sender address
                         // to: req.body.customerEmailId + ', ' + req.body.providerEmailId, // list of receivers
                         to: req.body.providerEmailId,
-                        subject: 'You reveived an order', // Subject line
+                        subject: 'You received an order from '+req.body.customerName, // Subject line
                         html: results.html, // html body
                     };
                     transport.sendMail(mailOptions, function(error, info) {
@@ -154,7 +154,7 @@ function orderConfirmCustomer(req, res) {
                 template.render(resolvedSavedOrder, function(err, results) {
                     if (results && results.html) {
                         let mailOptions = {
-                            from: '"fillurtummy 👥"<autoenthu@gmail.com>', // sender address
+                            from: '"Calljack-ie 👥"<autoenthu@gmail.com>', // sender address
                             to: resolvedSavedOrder.customerEmailId,
                             subject: 'Awwright! '+resolvedSavedOrder.providerName+ ' approved your order', // Subject line
                             html: results.html, // html body
@@ -248,7 +248,7 @@ function orderCancelCustomer(req, res) {
                     }
                     if (results && results.html) {
                         let mailOptions = {
-                            from: '"fillurtummy 👥"<autoenthu@gmail.com>', // sender address
+                            from: '"Calljack-ie 👥"<autoenthu@gmail.com>', // sender address
                             to: resolvedSavedOrder.customerEmailId,
                             subject: 'Oops! '+resolvedSavedOrder.providerName+ ' cancelled your order', // Subject line
                             html: results.html, // html body

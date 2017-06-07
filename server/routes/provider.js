@@ -15,6 +15,9 @@ router.route('/publish')
 router.route('/addOrEditFoodItem')
     // Post /api/providers/addOrEditFoodItem
     .post(ensureAuthenticated,userMakingChangeToOwnProfile, providerCtrl.addOrEditFoodItem);
+router.route('/remove')
+    // Post /api/providers/remove
+    .post(ensureAuthenticated, providerCtrl.remove);
 
 
 export default router;
