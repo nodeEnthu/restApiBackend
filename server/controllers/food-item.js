@@ -100,7 +100,6 @@ function remove(req, res, next) {
             res.json(resultArr);
         });
     } else res.json({ error: "incorrect use of api" });
-
 }
 
 /**

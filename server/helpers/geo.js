@@ -1,6 +1,7 @@
 import request from 'request'
 import config from '../../config/env/index'
-
+import { countryToCurrencyCodeMapping } from './countryToCurrencyMapping'
+import getSymbolFromCurrency from 'currency-symbol-map'
 
 export function getLatAndLong(place_id, cb) {
     if (place_id) {
@@ -19,11 +20,14 @@ export function getLatAndLong(place_id, cb) {
                 // take the first google recommendation .. i trust you google
                 let bestAddress = resolvedResponse.results[0];
                 let providerDisplayAddress = getProviderDisplayAddress(bestAddress);
+                let resolvedResult = parseGeoLocationResults(bestAddress);
                 return cb(null, {
                     latitude: bestAddress.geometry.location.lat,
                     longitude: bestAddress.geometry.location.lng,
                     place_id: place_id,
-                    providerDisplayAddress: providerDisplayAddress
+                    providerDisplayAddress: providerDisplayAddress,
+                    state: resolvedResult.state,
+                    country: resolvedResult.country
                 })
             }
         })
@@ -34,6 +38,7 @@ export function getLatAndLong(place_id, cb) {
 }
 
 export function saveLocation(user, result, place_id, address, action) {
+
     /**
      * check if the person is provider/consumer
      * provider should only add it to the userSeachLocations array
@@ -46,11 +51,19 @@ export function saveLocation(user, result, place_id, address, action) {
             place_id: place_id,
             searchText: address
         };
+        // update the state and country of the user
+        user.state = result.state;
+        user.country = result.country;
     }
     // now if user is in registration mode ... 
     if (action === 'registerProvider') {
         user.shortAddress = (user.keepAddressPrivateFlag) ? result.providerDisplayAddress : address;
         user.fullAddress = address;
+        const currencyCode = countryToCurrencyCodeMapping[result.country] || 'USD';
+        const currencySymbol = getSymbolFromCurrency(currencyCode);
+        // so intuitively when the person changes the price of item next time after changing his/her location
+        // the food item price will adopt the new currency
+        user.currency = currencySymbol;
     }
     // check whether the location already exists in userSeachLocations with place_id
     let locNotFound = true;
@@ -72,8 +85,10 @@ export function saveLocation(user, result, place_id, address, action) {
         user.deliveryAddressIndex = user.userSeachLocations.length - 1;
 
     } else {
+        // update the delivery address index
         user.deliveryAddressIndex = deliveryAddressIndex;
     }
+
     return user;
 }
 
@@ -88,9 +103,11 @@ export function getProviderDisplayAddress(result) {
         }
     }
     let hasStreetNumber = (address["street_number"]) ? true : false;
-    if (resultArr.length === 2) {} else if (resultArr.length === 3) {
+    if (resultArr.length === 3) {
+        //dont do anything
+    } else if (resultArr.length === 4) {
         resultArr.splice(0, 1);
-    } else if (!hasStreetNumber && resultArr.length === 4) {
+    } else if (!hasStreetNumber && resultArr.length === 5) {
         resultArr.splice(0, 1);
     } else resultArr.splice(0, 2);
     return resultArr.join(', ');
@@ -168,6 +185,10 @@ function parseGeoLocationResults(result) {
             } else if (address_components[i].types[b] == "administrative_area_level_1") {
                 //this is the object you are looking for
                 parsedResult.state = address_components[i].short_name;
+                break;
+            } else if (address_components[i].types[b] == "country") {
+                //this is the object you are looking for
+                parsedResult.country = address_components[i].short_name;
                 break;
             }
         }
