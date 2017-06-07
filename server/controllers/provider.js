@@ -94,7 +94,8 @@ function addOrEditFoodItem(req, res, next) {
                         return res.send(404);
                     } else {
                         let updated = merge(foodItem, req.body); // lodash merge method update matching fields with the new value
-                        updated.displayPrice = user.currency + ' ' + updated.price.toString();
+                        let currency = (user.currency && user.currency != 'undefined') ? user.currency : '$'
+                        updated.displayPrice = currency + ' ' + updated.price.toString();
                         updated.save(function(err, updatedFoodItem) {
                             if (err) {
                                 return res.json({ error: 'error saving edited foodItem' });
@@ -110,7 +111,8 @@ function addOrEditFoodItem(req, res, next) {
                 //create a new entry
                 const foodItem = new FoodItem(req.body);
                 foodItem._creator = user._id;
-                foodItem.displayPrice = user.currency + ' ' + foodItem.price.toString();
+                let currency = (user.currency && user.currency != 'undefined') ? user.currency : '$'
+                foodItem.displayPrice = currency + ' ' + foodItem.price.toString();
                 foodItem.save(function(err, savedFooditem) {
                     if (err) {
                         res.send("fooditem not saved");
