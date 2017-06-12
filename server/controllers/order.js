@@ -55,7 +55,10 @@ function orderSubmit(req, res) {
             req.body.orderId = savedOrder._id
             for (var key in req.body.itemsCheckedOut) {
                 if (req.body.itemsCheckedOut.hasOwnProperty(key)) {
-                    req.body.itemsCheckedOut[key].orderDate = moment(req.body.itemsCheckedOut[key].orderDate).format("ddd, MMM Do")
+                    req.body.itemsCheckedOut[key].orderDate = moment(req.body.itemsCheckedOut[key].orderDate).format("ddd, MMM Do");
+                    // overwrite price by displayPrice
+                    let displayPrice = req.body.itemsCheckedOut[key].displayPrice;
+                    req.body.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined')? displayPrice : '$ '+ req.body.itemsCheckedOut[key].price;
                 }
             }
             template.render(req.body, function(err, results) {
@@ -148,6 +151,9 @@ function orderConfirmCustomer(req, res) {
                 for (var key in resolvedSavedOrder.itemsCheckedOut) {
                     if (resolvedSavedOrder.itemsCheckedOut.hasOwnProperty(key)) {
                         resolvedSavedOrder.itemsCheckedOut[key].orderDate = moment(resolvedSavedOrder.itemsCheckedOut[key].orderDate).format("ddd, MMM Do")
+                        // overwrite price by displayPrice
+                        let displayPrice = resolvedSavedOrder.itemsCheckedOut[key].displayPrice;
+                        resolvedSavedOrder.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined')? displayPrice : '$ '+ resolvedSavedOrder.itemsCheckedOut[key].price;
                     }
                 }
                 let template = new EmailTemplate(path.join(templatesDir, 'order-confirmed-customer'));
@@ -239,7 +245,10 @@ function orderCancelCustomer(req, res) {
                 let template = new EmailTemplate(path.join(templatesDir, 'order-cancel-customer'));
                 for (var key in resolvedSavedOrder.itemsCheckedOut) {
                     if (resolvedSavedOrder.itemsCheckedOut.hasOwnProperty(key)) {
-                        resolvedSavedOrder.itemsCheckedOut[key].orderDate = moment(resolvedSavedOrder.itemsCheckedOut[key].orderDate).format("ddd, MMM Do")
+                        resolvedSavedOrder.itemsCheckedOut[key].orderDate = moment(resolvedSavedOrder.itemsCheckedOut[key].orderDate).format("ddd, MMM Do");
+                        // overwrite price by displayPrice
+                        let displayPrice = resolvedSavedOrder.itemsCheckedOut[key].displayPrice;
+                        resolvedSavedOrder.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined')? displayPrice : '$ '+ resolvedSavedOrder.itemsCheckedOut[key].price;
                     }
                 }
                 template.render(resolvedSavedOrder, function(err, results) {

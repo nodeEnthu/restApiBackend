@@ -154,8 +154,11 @@ function create(req, res, next) {
                 user.saveAsync()
                     .then((savedUser) => {
                         let token = createJWT(savedUser);
+                        // user is coming in for the first time
+                        // show a modal on fe for user to edit name and email
                         res.send({
                             user: savedUser,
+                            firstTime:true,
                             token: token
                         });
                     })

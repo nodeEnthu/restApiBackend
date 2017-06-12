@@ -37,6 +37,7 @@ var Order_Schema = new mongoose.Schema({
     orderTime:String,
     orderType: String,
     subTotal: String,
+    currency:String,
     modeOfPayment: String,
     mailSentToCustomer:{type:Boolean, default:false},
     mailSentToProvider:{type:Boolean, default:false}
