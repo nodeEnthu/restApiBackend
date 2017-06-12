@@ -41,16 +41,23 @@ function register(req, res, next) {
                     user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
                     user.description = userResponse.description;
                     user.email = userResponse.email,
-                        user.serviceOffered = serviceOfferedCode;
+                    user.serviceOffered = serviceOfferedCode;
                     user.addtnlComments = userResponse.addtnlComments;
                     user.deliveryMinOrder = userResponse.deliveryMinOrder;
                     user.deliveryRadius = userResponse.deliveryRadius;
                     user.imgUrl = userResponse.imgUrl;
+                    console.log("before",user.methodsOfPayment);
+                    user.methodsOfPayment = userResponse.methodsOfPayment;
+                    console.log("after",user.methodsOfPayment);
                     user = saveLocation(user, result, place_id, searchText, action);
                     // now we are ready to go to publish stage 2 .. so 2 instead of 1
                     user.publishStage = 2;
                     user.save(function(err, savedUser) {
-                        console.log(savedUser)
+                        console.log(err,savedUser)
+                       if(err){
+                        res.status(500);
+                        res.send({err:err})
+                       }
                         res.json({ status: 'ok' });
                     })
                 }
@@ -93,10 +100,28 @@ function addOrEditFoodItem(req, res, next) {
                     if (!foodItem) {
                         return res.send(404);
                     } else {
-                        let updated = merge(foodItem, req.body); // lodash merge method update matching fields with the new value
+                        foodItem.avalilabilityType = userResponse.avalilabilityType;
+                        foodItem.lowcarb = userResponse.lowcarb;
+                        foodItem.vegan = userResponse.vegan;
+                        foodItem.nondairy = userResponse.nondairy;
+                        foodItem.price = userResponse.price;
+                        foodItem.name = userResponse.name;
+                        foodItem.organic = userResponse.organic;
+                        foodItem.pickUpEndTime = userResponse.pickUpEndTime;
+                        foodItem.imgUrl = userResponse.imgUrl;
+                        foodItem.indianFasting = userResponse.indianFasting;
+                        foodItem.pickUpStartTime = userResponse.pickUpStartTime;
+                        foodItem.glutenfree = userResponse.glutenfree;
+                        foodItem.nutfree = userResponse.nutfree;
+                        foodItem.availability = userResponse.availability;
+                        foodItem.description = userResponse.description;
+                        foodItem.placeOrderBy = userResponse.placeOrderBy;
+                        foodItem.cuisineType = userResponse.cuisineType;
+                        foodItem.vegetarian = userResponse.vegetarian;
+                        foodItem.oilfree = userResponse.oilfre;
                         let currency = (user.currency && user.currency != 'undefined') ? user.currency : '$'
-                        updated.displayPrice = currency + ' ' + updated.price.toString();
-                        updated.save(function(err, updatedFoodItem) {
+                        foodItem.displayPrice = currency + ' ' + foodItem.price.toString();
+                        foodItem.save(function(err, updatedFoodItem) {
                             if (err) {
                                 return res.json({ error: 'error saving edited foodItem' });
                             } else {

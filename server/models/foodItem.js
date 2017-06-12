@@ -7,22 +7,22 @@ var FoodItem_Schema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    rating:{type:Number,default:0},
+    rating:{type:Number,default:0,index: true },
     numOfReviews:{type:Number,default:0},
     reviews: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Review'
     }],
-    avalilabilityType:{type:String,default:'onOrder'},
+    avalilabilityType:{type:String,default:'onOrder',index: true},
     reviewers:[String],
     imgUrl:String,
     placeOrderBy: { type: Number},
-    availability:[Date],
+    availability:{type:[Date],index: true },
     pickUpStartTime:String,
     pickUpEndTime:String,
     price:Number,
     displayPrice:String,
-    cuisineType:String,
+    cuisineType:{type: String, index: true },
     organic:Boolean,
     vegetarian:Boolean,
     glutenfree:Boolean,
@@ -31,7 +31,8 @@ var FoodItem_Schema = new mongoose.Schema({
     nutfree:Boolean,
     oilfree:Boolean,
     nondairy:Boolean,
-    indianFasting:Boolean
+    indianFasting:Boolean,
+    nonVeg:{type: Boolean, index: true },
 }, { collection: 'foodItems',timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 export default mongoose.model('FoodItem', FoodItem_Schema);

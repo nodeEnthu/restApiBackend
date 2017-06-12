@@ -7,16 +7,19 @@ import APIError from '../helpers/APIError';
  */
 const UserSchema = new mongoose.Schema({
     name: { type: String, default: '' },
-    email: { type: String, default: '' },
+    email: { type: String, default: '', index: true },
     img: { type: String, default: '' },
     fbUserID: { type: String, default: '' },
     gmailUserID: { type: String, default: '' },
     userType: { type: String, default: 'consumer' },
     homepageUrl: String,
-    foodItems: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'FoodItem'
-    }],
+    foodItems: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodItem'
+        }],
+        index: true
+    },
     service: { type: Number },
     reviewEligibleFoodItems: [],
     imgUrl: String,
@@ -35,8 +38,8 @@ const UserSchema = new mongoose.Schema({
         place_id: String
     },
     /*
-    * keepAddressPrivateFlag = true 
-    */
+     * keepAddressPrivateFlag = true 
+     */
     shortAddress: { type: String, default: '' },
     fullAddress: { type: String, default: '' },
     /*
@@ -58,15 +61,16 @@ const UserSchema = new mongoose.Schema({
     addtnlComments: { type: String, default: '' },
     title: String,
     keepAddressPrivateFlag: { type: Boolean, default: false },
+    methodsOfPayment: [Number],
     description: String,
     deliveryRadius: String,
     deliveryMinOrder: String,
-    ordersReceived:{ type: Number, default: 0 },
-    ordersConfirmed:{ type: Number, default: 0 },
-    ordersCancelled:{ type: Number, default: 0 },
-    state:String,
-    country:String,
-    currency:String
+    ordersReceived: { type: Number, default: 0 },
+    ordersConfirmed: { type: Number, default: 0 },
+    ordersCancelled: { type: Number, default: 0 },
+    state: String,
+    country: String,
+    currency: String
 }, { collection: 'users', timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 /**

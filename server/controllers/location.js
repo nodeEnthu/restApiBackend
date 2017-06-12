@@ -88,7 +88,7 @@ function registerMostRecentSearchLocation(req, res, next) {
                 } else {
                     user = saveLocation(user, result, place_id, address);
                     user.save(function(err, savedUser) {
-                        res.json(savedUser);
+                        res.json({status: 'ok'});
                     })
                 }
             })
