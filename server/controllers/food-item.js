@@ -2,7 +2,7 @@ import User from '../models/user';
 import FoodItem from '../models/foodItem'
 import Review from '../models/review'
 import async from 'async'
-
+import {deleteAwsImage} from './../helpers/awsUtils'
 function review(req, res, next) {
     const { foodItemId, creatorId, reviewDate, creatorName, rating, review } = req.body;
     FoodItem.findById(foodItemId, function(err, foodItem) {
@@ -93,6 +93,10 @@ function remove(req, res, next) {
             },
             function removeFoodItem(cb) {
                 FoodItem.findByIdAndRemove(foodItemId, function(err, foodItemDeleted) {
+                    let imgUrl =  foodItemDeleted.imgUrl;
+                    let imgName = imgUrl.split('/').pop();
+                    // call this and forget
+                    deleteAwsImage(imgName);
                     cb();
                 });
             }

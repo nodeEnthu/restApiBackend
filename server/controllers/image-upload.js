@@ -1,18 +1,13 @@
 import AWS from 'aws-sdk';
 import request from 'request'
 import fs from 'fs'
-
-AWS.config.update({
-    "accessKeyId": "AKIAISGDIT6QWWGXAEPA",
-    "secretAccessKey": "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"
-});
-let s3 = new AWS.S3({region:'us-west-2'});
-
+import {s3} from './../helpers/awsUtils'
+import config from '../../config/env/index'
 function sign(req, res, next) {
     const fileName = req.body['file-name'];
     const fileType = req.body['file-type'];
     const s3Params = {
-        Bucket: 'upload-test-dev',
+        Bucket: config.AWS_BUCKET_NAME,
         Key: fileName,
         Expires: 60,
         ContentType: fileType,
@@ -25,7 +20,7 @@ function sign(req, res, next) {
         }
         const returnData = {
             signedRequest: data,
-            url: `https://upload-test-dev.amazonaws.com/${fileName}`
+            url: `https://${config.AWS_BUCKET_NAME}.amazonaws.com/${fileName}`
 
         };
         res.json(returnData);

@@ -8,6 +8,7 @@ import config from '../../config/env/index'
 import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress } from '../helpers/geo'
 import async from 'async';
 import merge from 'lodash.merge';
+import { deleteAwsImage } from './../helpers/awsUtils'
 
 function register(req, res, next) {
     let action = 'registerProvider';
@@ -41,23 +42,21 @@ function register(req, res, next) {
                     user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
                     user.description = userResponse.description;
                     user.email = userResponse.email,
-                    user.serviceOffered = serviceOfferedCode;
+                        user.serviceOffered = serviceOfferedCode;
                     user.addtnlComments = userResponse.addtnlComments;
                     user.deliveryMinOrder = userResponse.deliveryMinOrder;
                     user.deliveryRadius = userResponse.deliveryRadius;
                     user.imgUrl = userResponse.imgUrl;
-                    console.log("before",user.methodsOfPayment);
                     user.methodsOfPayment = userResponse.methodsOfPayment;
-                    console.log("after",user.methodsOfPayment);
                     user = saveLocation(user, result, place_id, searchText, action);
                     // now we are ready to go to publish stage 2 .. so 2 instead of 1
                     user.publishStage = 2;
                     user.save(function(err, savedUser) {
-                        console.log(err,savedUser)
-                       if(err){
-                        res.status(500);
-                        res.send({err:err})
-                       }
+                        console.log(err)
+                        if (err) {
+                            res.status(500);
+                            res.send({ err: err })
+                        }
                         res.json({ status: 'ok' });
                     })
                 }
@@ -108,7 +107,19 @@ function addOrEditFoodItem(req, res, next) {
                         foodItem.name = userResponse.name;
                         foodItem.organic = userResponse.organic;
                         foodItem.pickUpEndTime = userResponse.pickUpEndTime;
-                        foodItem.imgUrl = userResponse.imgUrl;
+                        /**
+                         * check whether the image has changed from last one
+                         * if changed then delete the one which is replaced
+                         **/
+                        if (userResponse.imgUrl != foodItem.imgUrl && userResponse.imgUrl != '') {
+                            if (foodItem.imgUrl != '') {
+                                let imgUrl = foodItem.imgUrl;
+                                let imgName = imgUrl.split('/').pop();
+                                // call this and forget
+                                deleteAwsImage(imgName);
+                            }
+                            foodItem.imgUrl = userResponse.imgUrl;
+                        }
                         foodItem.indianFasting = userResponse.indianFasting;
                         foodItem.pickUpStartTime = userResponse.pickUpStartTime;
                         foodItem.glutenfree = userResponse.glutenfree;
@@ -170,7 +181,6 @@ function remove(req, res, next) {
     function removeReviewsWithId(id) {
         return function(cb) {
             Review.findByIdAndRemove(id, function(err, review) {
-                console.log("Step:4 Removing the review", id);
                 cb();
             })
         }
@@ -196,6 +206,10 @@ function remove(req, res, next) {
                 function removeFoodItemNow(cb) {
                     FoodItem.findByIdAndRemove(foodItemId, function(err, foodItemDeleted) {
                         //console.log("error in removing the foodItem" ,err)
+                        let imgUrl = foodItemDeleted.imgUrl;
+                        let imgName = imgUrl.split('/').pop();
+                        // call this and forget
+                        deleteAwsImage(imgName);
                         cb(null);
                     });
                 }
@@ -239,6 +253,10 @@ function remove(req, res, next) {
                 //console.log(" coming here to delet the user");
                 User.findByIdAndRemove(loggedInUser, function(err, userDeleted) {
                     //console.log("Step:6 Finally removing the user", loggedInUser);
+                    let imgUrl = userDeleted.imgUrl;
+                    let imgName = imgUrl.split('/').pop();
+                    // call this and forget
+                    deleteAwsImage(imgName);
                     cb(err);
                 });
             }
