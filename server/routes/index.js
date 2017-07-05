@@ -6,6 +6,7 @@ import queryRoutes from './query';
 import orderRoutes from './order';
 import foodItemRoutes from './food-item';
 import imageUploadRoutes from './image-upload';
+import envRoutes from './env';
 const router = express.Router();	// eslint-disable-line new-cap
 
 /** GET /health-check - Check service health */
@@ -23,6 +24,7 @@ router.use('/query',queryRoutes);
 router.use('/order',orderRoutes);
 router.use('/foodItem',foodItemRoutes);
 router.use('/upload',imageUploadRoutes);
+router.use('/env',envRoutes);
 
 
 export default router;

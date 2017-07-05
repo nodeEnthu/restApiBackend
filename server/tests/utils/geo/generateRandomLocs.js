@@ -26,7 +26,6 @@ function generateRandomPoint(center, radius) {
     var newlon2 = xp + x0;
 
     // Resulting point.
-    console.log({ 'lat': y + y0, 'lng': x + x0 })
     return { 'lat': y + y0, 'lng': x + x0 };
 }
 
