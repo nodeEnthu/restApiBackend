@@ -24,7 +24,7 @@ function review(req, res, next) {
                     foodItem.rating = newRating;
                     foodItem.numOfReviews = numberOfReviews;
                     foodItem.save(function(err, savedFooditem) {
-                        res.json(savedFooditem);
+                        res.json({status:'ok'});
                     });
                 });
             } else {
@@ -118,4 +118,4 @@ function list(req, res, next) {
         .error((e) => next(e));
 }
 
-export default { review, reviews, get, remove, list };
+export default { review, reviews, get, remove,list };
