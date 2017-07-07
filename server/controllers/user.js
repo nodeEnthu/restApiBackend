@@ -4,7 +4,7 @@ import moment from 'moment';
 import config from '../../config/env/index'
 import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress, getProviderAddress } from '../helpers/geo'
 import async from 'async';
-
+import {filterProviderResponse} from '../helpers/filterProviderResponse'
 /**
  * Create JWT token
  */
@@ -34,6 +34,7 @@ function load(req, res) {
                     userAndFoodItems.searchText = getSearchAddress(userAndFoodItems).address;
                     userAndFoodItems.place_id = getSearchAddress(userAndFoodItems).place_id;
                     userAndFoodItems.displayAddress = getDisplayAddress(userAndFoodItems);
+                    userAndFoodItems = filterProviderResponse(userAndFoodItems);
                     res.json(userAndFoodItems);
                 }
             })
@@ -52,8 +53,10 @@ function profileEdit(req, res) {
         .lean()
         .exec(function(err, userAndFoodItems) {
             // lets insert correct address
+            
             userAndFoodItems.searchText = getProviderAddress(userAndFoodItems).address;
             userAndFoodItems.place_id = getProviderAddress(userAndFoodItems).place_id;
+            userAndFoodItems = filterProviderResponse(userAndFoodItems);
             res.json(userAndFoodItems)
         })
 }
@@ -94,6 +97,7 @@ function get(req, res) {
                             // lets insert correct address
                             userAndFoodItems.displayAddress = getDisplayAddress(userAndFoodItems);
                             reviewEligibleFoodItems = reviewEligibleFoodItems || [];
+                            userAndFoodItems = filterProviderResponse(userAndFoodItems);
                             userAndFoodItems.foodItems.forEach(function(foodItem, index) {
                                 // user is not logged in
                                 if (loggedInUser === '') {
@@ -191,9 +195,7 @@ function update(req, res, next) {
  * @returns {User[]}
  */
 function list(req, res, next) {
-    const { limit = 50, skip = 0 } = req.query;
-    User.list({ limit, skip }).then((users) => res.json(users))
-        .error((e) => next(e));
+    res.json({key:'noop'});
 }
 
 /**

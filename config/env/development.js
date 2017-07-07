@@ -2,6 +2,7 @@ export default {
     env: 'development',
     db: 'mongodb://localhost:27017/test',
     port: 8080,
+    homeUrl:'http://sample-env-2.brv2yyskaw.us-west-2.elasticbeanstalk.com/',
     TOKEN_SECRET: 'AVERYSECRETIVEINFO',
     AWS_BUCKET_NAME: 'upload-test-dev',
     ACCESS_KEY_ID: "AKIAISGDIT6QWWGXAEPA",

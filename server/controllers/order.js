@@ -2,17 +2,33 @@ import path from 'path';
 import async from 'async';
 import nodemailer from 'nodemailer';
 import email_templates from 'email-templates';
+import smtpTransport from 'nodemailer-smtp-transport';
 import sesTransport from 'nodemailer-ses-transport';
 import Order from '../models/order';
 import User from '../models/user';
 import moment from 'moment';
+import config from '../../config/env/index'
 
-const transport = nodemailer.createTransport(sesTransport({
-    "accessKeyId": "AKIAISGDIT6QWWGXAEPA",
-    "secretAccessKey": "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",
-    "region": 'us-west-2',
-    "rateLimit": 5 // do not send more than 5 messages in a second 
-}));
+
+const ENV = config.env;
+
+const transport = (ENV === 'production') ?
+    nodemailer.createTransport(smtpTransport({
+        host: "email-smtp.us-west-2.amazonaws.com", // Amazon email SMTP hostname
+        secureConnection: true, // use SSL
+        port: 465, // port for secure SMTP
+        auth: {
+            user: "AKIAJ32VGSZIGP2KL4WA", // Use from Amazon Credentials
+            pass: "Aq5LjDkOL8dAGukDDzK6AA60J+LVzamz2vP7wLa30HNE" // Use from Amazon Credentials
+        }
+    })) 
+    :
+    nodemailer.createTransport(sesTransport({
+        "accessKeyId": config.ACCESS_KEY_ID,
+        "secretAccessKey": config.SECRET_ACCESS_KEY,
+        "region": 'us-west-2',
+        "rateLimit": 5 // do not send more than 5 messages in a second 
+    }));
 
 // let transport = nodemailer.createTransport({
 //     service: 'Gmail',
@@ -51,40 +67,41 @@ function orderSubmit(req, res) {
         },
         function sendEmailToProvider(savedOrder, cb) {
             let template = new EmailTemplate(path.join(templatesDir, 'order-submit-provider'));
-            req.body.orderActionUrl = "http://sample-env-2.brv2yyskaw.us-west-2.elasticbeanstalk.com/order/" + savedOrder._id + "/" + savedOrder._creator + "/confirm/order-action";
+            req.body.orderActionUrl = config.homeUrl+ "order/" + savedOrder._id + "/" + savedOrder._creator + "/confirm/order-action";
             req.body.orderId = savedOrder._id
             for (var key in req.body.itemsCheckedOut) {
                 if (req.body.itemsCheckedOut.hasOwnProperty(key)) {
                     req.body.itemsCheckedOut[key].orderDate = moment(req.body.itemsCheckedOut[key].orderDate).format("ddd, MMM Do");
                     // overwrite price by displayPrice
                     let displayPrice = req.body.itemsCheckedOut[key].displayPrice;
-                    req.body.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined')? displayPrice : '$ '+ req.body.itemsCheckedOut[key].price;
+                    req.body.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined') ? displayPrice : '$ ' + req.body.itemsCheckedOut[key].price;
                 }
             }
             template.render(req.body, function(err, results) {
                 if (results && results.html) {
                     let mailOptions = {
-                        from: '"Calljack-ie 👥"<autoenthu@gmail.com>', // sender address
+                        from: '"Calljack-ie 👥"<orders@calljack-ie.com>', // sender address
                         // to: req.body.customerEmailId + ', ' + req.body.providerEmailId, // list of receivers
                         to: req.body.providerEmailId,
-                        subject: 'You received an order from '+req.body.customerName, // Subject line
+                        subject: 'You received an order from ' + req.body.customerName, // Subject line
                         html: results.html, // html body
                     };
                     transport.sendMail(mailOptions, function(error, info) {
+                        console.log(error);
                         cb(error, savedOrder);
                     });
                 } else cb(err, savedOrder);
             });
         },
-        function incrementProviderOrderCount(savedOrder,cb){
+        function incrementProviderOrderCount(savedOrder, cb) {
             User.findById(savedOrder._providerId)
-                .exec(function(err,user){
-                    if(user){
-                        user.ordersReceived = user.ordersReceived +1;
+                .exec(function(err, user) {
+                    if (user) {
+                        user.ordersReceived = user.ordersReceived + 1;
                         user.save(); // hopefully it should be saved
                     }
-                    
-                    cb(err,savedOrder);
+
+                    cb(err, savedOrder);
                 })
         }
     ], function(err, savedOrder) {
@@ -151,18 +168,18 @@ function orderConfirmCustomer(req, res) {
                 for (var key in resolvedSavedOrder.itemsCheckedOut) {
                     if (resolvedSavedOrder.itemsCheckedOut.hasOwnProperty(key)) {
                         resolvedSavedOrder.itemsCheckedOut[key].orderDate = moment(resolvedSavedOrder.itemsCheckedOut[key].orderDate).format("ddd, MMM Do")
-                        // overwrite price by displayPrice
+                            // overwrite price by displayPrice
                         let displayPrice = resolvedSavedOrder.itemsCheckedOut[key].displayPrice;
-                        resolvedSavedOrder.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined')? displayPrice : '$ '+ resolvedSavedOrder.itemsCheckedOut[key].price;
+                        resolvedSavedOrder.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined') ? displayPrice : '$ ' + resolvedSavedOrder.itemsCheckedOut[key].price;
                     }
                 }
                 let template = new EmailTemplate(path.join(templatesDir, 'order-confirmed-customer'));
                 template.render(resolvedSavedOrder, function(err, results) {
                     if (results && results.html) {
                         let mailOptions = {
-                            from: '"Calljack-ie 👥"<autoenthu@gmail.com>', // sender address
+                            from: '"Calljack-ie 👥"<orders@calljack-ie.com>', // sender address
                             to: resolvedSavedOrder.customerEmailId,
-                            subject: 'Awwright! '+resolvedSavedOrder.providerName+ ' approved your order', // Subject line
+                            subject: 'Awwright! ' + resolvedSavedOrder.providerName + ' approved your order', // Subject line
                             html: results.html, // html body
                         };
                         transport.sendMail(mailOptions, function(error, info) {
@@ -171,14 +188,14 @@ function orderConfirmCustomer(req, res) {
                     } else cb(err);
                 });
             },
-            function incrementProviderConfimCount(savedOrder,cb){
+            function incrementProviderConfimCount(savedOrder, cb) {
                 User.findById(savedOrder._providerId)
-                    .exec(function(err,user){
-                        if(user){
-                            user.ordersConfirmed = user.ordersConfirmed +1;
+                    .exec(function(err, user) {
+                        if (user) {
+                            user.ordersConfirmed = user.ordersConfirmed + 1;
                             user.save();
                         }
-                        cb(err,savedOrder);
+                        cb(err, savedOrder);
                     })
             }
         ],
@@ -208,7 +225,7 @@ function orderCancelCustomer(req, res) {
                             order.providerAddtnlInfo = cancelledOrder.providerAddtnlInfo;
                             order.updatedByProvider = cancelledOrder.updatedByProvider;
                             order.cancelReason = cancelledOrder.cancelReason;
-                            
+
                             order.mailSentToCustomer = true;
                             order.status = 0;
 
@@ -221,7 +238,7 @@ function orderCancelCustomer(req, res) {
                                 { value: 6, label: 'Other' }
                             ];
                             if (cancelledOrder.cancelReason === 6) {
-                                order.cancelText = cancelledOrder.cancelText ;
+                                order.cancelText = cancelledOrder.cancelText;
                             } else {
                                 CANCEL_REASONS.forEach(function(cancelReason) {
                                     if (cancelReason.value === order.cancelReason) {
@@ -248,18 +265,18 @@ function orderCancelCustomer(req, res) {
                         resolvedSavedOrder.itemsCheckedOut[key].orderDate = moment(resolvedSavedOrder.itemsCheckedOut[key].orderDate).format("ddd, MMM Do");
                         // overwrite price by displayPrice
                         let displayPrice = resolvedSavedOrder.itemsCheckedOut[key].displayPrice;
-                        resolvedSavedOrder.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined')? displayPrice : '$ '+ resolvedSavedOrder.itemsCheckedOut[key].price;
+                        resolvedSavedOrder.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined') ? displayPrice : '$ ' + resolvedSavedOrder.itemsCheckedOut[key].price;
                     }
                 }
                 template.render(resolvedSavedOrder, function(err, results) {
-                    if(err){
-                        console.log(err) 
+                    if (err) {
+                        console.log(err)
                     }
                     if (results && results.html) {
                         let mailOptions = {
                             from: '"Calljack-ie 👥"<autoenthu@gmail.com>', // sender address
                             to: resolvedSavedOrder.customerEmailId,
-                            subject: 'Oops! '+resolvedSavedOrder.providerName+ ' cancelled your order', // Subject line
+                            subject: 'Oops! ' + resolvedSavedOrder.providerName + ' cancelled your order', // Subject line
                             html: results.html, // html body
                         };
                         transport.sendMail(mailOptions, function(error, info) {
@@ -268,15 +285,15 @@ function orderCancelCustomer(req, res) {
                     } else cb(err);
                 });
             },
-            function incrementProviderCancelCount(savedOrder,cb){
+            function incrementProviderCancelCount(savedOrder, cb) {
                 User.findById(savedOrder._providerId)
-                    .exec(function(err,user){
-                        if(user){
-                            user.ordersCancelled = user.ordersCancelled +1;
+                    .exec(function(err, user) {
+                        if (user) {
+                            user.ordersCancelled = user.ordersCancelled + 1;
                             user.save(); // hopefully it should be saved
                         }
-                        
-                        cb(err,savedOrder);
+
+                        cb(err, savedOrder);
                     })
             }
         ],

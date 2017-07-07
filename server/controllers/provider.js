@@ -41,8 +41,8 @@ function register(req, res, next) {
                     user.title = userResponse.title;
                     user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
                     user.description = userResponse.description;
-                    user.email = userResponse.email,
-                        user.serviceOffered = serviceOfferedCode;
+                    user.email = userResponse.email;
+                    user.serviceOffered = serviceOfferedCode;
                     user.addtnlComments = userResponse.addtnlComments;
                     user.deliveryMinOrder = userResponse.deliveryMinOrder;
                     user.deliveryRadius = userResponse.deliveryRadius;
@@ -52,7 +52,6 @@ function register(req, res, next) {
                     // now we are ready to go to publish stage 2 .. so 2 instead of 1
                     user.publishStage = 2;
                     user.save(function(err, savedUser) {
-                        console.log(err)
                         if (err) {
                             res.status(500);
                             res.send({ err: err })
@@ -106,6 +105,7 @@ function addOrEditFoodItem(req, res, next) {
                         foodItem.price = userResponse.price;
                         foodItem.name = userResponse.name;
                         foodItem.organic = userResponse.organic;
+                        foodItem.nonveg = userResponse.nonveg;
                         foodItem.pickUpEndTime = userResponse.pickUpEndTime;
                         /**
                          * check whether the image has changed from last one
@@ -206,10 +206,12 @@ function remove(req, res, next) {
                 function removeFoodItemNow(cb) {
                     FoodItem.findByIdAndRemove(foodItemId, function(err, foodItemDeleted) {
                         //console.log("error in removing the foodItem" ,err)
-                        let imgUrl = foodItemDeleted.imgUrl;
-                        let imgName = imgUrl.split('/').pop();
-                        // call this and forget
-                        deleteAwsImage(imgName);
+                        if (foodItemDeleted) {
+                            let imgUrl = foodItemDeleted.imgUrl;
+                            let imgName = imgUrl.split('/').pop();
+                            // call this and forget
+                            deleteAwsImage(imgName);
+                        }
                         cb(null);
                     });
                 }
@@ -254,9 +256,12 @@ function remove(req, res, next) {
                 User.findByIdAndRemove(loggedInUser, function(err, userDeleted) {
                     //console.log("Step:6 Finally removing the user", loggedInUser);
                     let imgUrl = userDeleted.imgUrl;
-                    let imgName = imgUrl.split('/').pop();
-                    // call this and forget
-                    deleteAwsImage(imgName);
+                    if (imgUrl) {
+                        let imgName = imgUrl.split('/').pop();
+                        // call this and forget
+                        deleteAwsImage(imgName);
+                    }
+
                     cb(err);
                 });
             }
