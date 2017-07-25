@@ -13,6 +13,7 @@ const UserSchema = new mongoose.Schema({
     gmailUserID: { type: String, default: '' },
     userType: { type: String, default: 'consumer' },
     homepageUrl: String,
+    devices:{ type: [String], default: [] },
     foodItems: {
         type: [{
             type: mongoose.Schema.Types.ObjectId,

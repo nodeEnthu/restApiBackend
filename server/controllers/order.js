@@ -8,7 +8,7 @@ import Order from '../models/order';
 import User from '../models/user';
 import moment from 'moment';
 import config from '../../config/env/index'
-
+import { sendNotification } from '../helpers/sendNotification'
 
 const ENV = config.env;
 
@@ -21,8 +21,7 @@ const transport = (ENV === 'production') ?
             user: "AKIAJ32VGSZIGP2KL4WA", // Use from Amazon Credentials
             pass: "Aq5LjDkOL8dAGukDDzK6AA60J+LVzamz2vP7wLa30HNE" // Use from Amazon Credentials
         }
-    })) 
-    :
+    })) :
     nodemailer.createTransport(sesTransport({
         "accessKeyId": config.ACCESS_KEY_ID,
         "secretAccessKey": config.SECRET_ACCESS_KEY,
@@ -30,24 +29,17 @@ const transport = (ENV === 'production') ?
         "rateLimit": 5 // do not send more than 5 messages in a second 
     }));
 
-// let transport = nodemailer.createTransport({
-//     service: 'Gmail',
-//     auth: {
-//         user: 'autoenthu@gmail.com',
-//         pass: 'XXXXX'
-//     }
-// });
-
 let EmailTemplate = email_templates.EmailTemplate;
 const templatesDir = path.resolve(__dirname, '../../');
 
 
 function orderSubmit(req, res) {
     /*
-     *  do 3 things
+     *  do 4 things
      *   1. create a new mongodb entry for order
      *   2. send an to the provider asking him/her to confirm that order has been submitted
-     *   3. return back the order summary with the current status (waiting for provider confirmation)
+     *   3. Send a notification to provider
+     *   4. return back the order summary with the current status (waiting for provider confirmation)
      */
 
 
@@ -67,7 +59,7 @@ function orderSubmit(req, res) {
         },
         function sendEmailToProvider(savedOrder, cb) {
             let template = new EmailTemplate(path.join(templatesDir, 'order-submit-provider'));
-            req.body.orderActionUrl = config.homeUrl+ "order/" + savedOrder._id + "/" + savedOrder._creator + "/confirm/order-action";
+            req.body.orderActionUrl = config.homeUrl + "order/" + savedOrder._id + "/" + savedOrder._creator + "/confirm/order-action";
             req.body.orderId = savedOrder._id
             for (var key in req.body.itemsCheckedOut) {
                 if (req.body.itemsCheckedOut.hasOwnProperty(key)) {
@@ -80,7 +72,7 @@ function orderSubmit(req, res) {
             template.render(req.body, function(err, results) {
                 if (results && results.html) {
                     let mailOptions = {
-                        from: '"Calljack-ie 👥"<orders@calljack-ie.com>', // sender address
+                        from: '"Spoon&Spanner 👥"<orders.noreply@spoonandspanner.com>', // sender address
                         // to: req.body.customerEmailId + ', ' + req.body.providerEmailId, // list of receivers
                         to: req.body.providerEmailId,
                         subject: 'You received an order from ' + req.body.customerName, // Subject line
@@ -92,6 +84,19 @@ function orderSubmit(req, res) {
                     });
                 } else cb(err, savedOrder);
             });
+        },
+        function sendNotificationToProvider(savedOrder, cb) {
+            User.findById(savedOrder._providerId, function(err, user) {
+                if (user) {
+                    let devices = user.devices;
+                    devices = devices || [];
+                    // register in the list of devices
+                    if (devices.length > 0) {
+                        sendNotification('New order from ' + savedOrder.customerName, devices);
+                    }
+                }
+            })
+            cb(null, savedOrder);
         },
         function incrementProviderOrderCount(savedOrder, cb) {
             User.findById(savedOrder._providerId)
@@ -168,7 +173,7 @@ function orderConfirmCustomer(req, res) {
                 for (var key in resolvedSavedOrder.itemsCheckedOut) {
                     if (resolvedSavedOrder.itemsCheckedOut.hasOwnProperty(key)) {
                         resolvedSavedOrder.itemsCheckedOut[key].orderDate = moment(resolvedSavedOrder.itemsCheckedOut[key].orderDate).format("ddd, MMM Do")
-                            // overwrite price by displayPrice
+                        // overwrite price by displayPrice
                         let displayPrice = resolvedSavedOrder.itemsCheckedOut[key].displayPrice;
                         resolvedSavedOrder.itemsCheckedOut[key].price = (displayPrice && displayPrice != 'undefined') ? displayPrice : '$ ' + resolvedSavedOrder.itemsCheckedOut[key].price;
                     }
@@ -177,7 +182,7 @@ function orderConfirmCustomer(req, res) {
                 template.render(resolvedSavedOrder, function(err, results) {
                     if (results && results.html) {
                         let mailOptions = {
-                            from: '"Calljack-ie 👥"<orders@calljack-ie.com>', // sender address
+                            from: '"Spoon&Spanner 👥"<orders.noreply@spoonandspanner.com>', // sender address
                             to: resolvedSavedOrder.customerEmailId,
                             subject: 'Awwright! ' + resolvedSavedOrder.providerName + ' approved your order', // Subject line
                             html: results.html, // html body
@@ -187,6 +192,19 @@ function orderConfirmCustomer(req, res) {
                         });
                     } else cb(err);
                 });
+            },
+            function sendNotificationToCustomer(savedOrder, cb) {
+                User.findById(savedOrder._creator, function(err, user) {
+                    if (user) {
+                        let devices = user.devices;
+                        devices = devices || [];
+                        // register in the list of devices
+                        if (devices.length > 0) {
+                            sendNotification('Confirmed! order with ' + savedOrder.providerName, devices);
+                        }
+                    }
+                })
+                cb(null, savedOrder);
             },
             function incrementProviderConfimCount(savedOrder, cb) {
                 User.findById(savedOrder._providerId)
@@ -274,7 +292,7 @@ function orderCancelCustomer(req, res) {
                     }
                     if (results && results.html) {
                         let mailOptions = {
-                            from: '"Calljack-ie 👥"<autoenthu@gmail.com>', // sender address
+                            from: '"Spoon&Spanner 👥"<orders.noreply@spoonandspanner.com>', // sender address
                             to: resolvedSavedOrder.customerEmailId,
                             subject: 'Oops! ' + resolvedSavedOrder.providerName + ' cancelled your order', // Subject line
                             html: results.html, // html body
@@ -284,6 +302,19 @@ function orderCancelCustomer(req, res) {
                         });
                     } else cb(err);
                 });
+            },
+            function sendNotificationToCustomer(savedOrder, cb) {
+                User.findById(savedOrder._creator, function(err, user) {
+                    if (user) {
+                        let devices = user.devices;
+                        devices = devices || [];
+                        // register in the list of devices
+                        if (devices.length > 0) {
+                            sendNotification('Cancelled! order with ' + savedOrder.providerName, devices);
+                        }
+                    }
+                })
+                cb(null, savedOrder);
             },
             function incrementProviderCancelCount(savedOrder, cb) {
                 User.findById(savedOrder._providerId)

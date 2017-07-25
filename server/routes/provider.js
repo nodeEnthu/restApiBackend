@@ -1,8 +1,7 @@
 import express from 'express';
 import providerCtrl from '../controllers/provider';
-import ensureAuthenticated from '../helpers/ensureAuthenticated';
 import config from '../../config/env'
-import {userMakingChangeToOwnProfile} from '../helpers/ensureAuthenticated';
+import ensureAuthenticated, {userMakingChangeToOwnProfile} from '../helpers/ensureAuthenticated';
 
 const router = express.Router(); // eslint-disable-line new-cap
 
