@@ -7,6 +7,8 @@ import orderRoutes from './order';
 import foodItemRoutes from './food-item';
 import imageUploadRoutes from './image-upload';
 import envRoutes from './env';
+import deviceRoutes from './device';
+
 const router = express.Router();	// eslint-disable-line new-cap
 
 /** GET /health-check - Check service health */
@@ -25,6 +27,7 @@ router.use('/order',orderRoutes);
 router.use('/foodItem',foodItemRoutes);
 router.use('/upload',imageUploadRoutes);
 router.use('/env',envRoutes);
+router.use('/device',deviceRoutes);
 
 
 export default router;
