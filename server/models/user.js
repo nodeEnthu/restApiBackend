@@ -23,7 +23,7 @@ const UserSchema = new mongoose.Schema({
     },
     service: { type: Number },
     reviewEligibleFoodItems: [],
-    imgUrl: String,
+    imgUrl: { type: String, default: 'https://s3-us-west-1.amazonaws.com/prod-usr-food-imgs/default_profile_pic.jpg' },
     published: { type: Boolean, default: false },
     publishStage: { type: Number, default: 0 },
     /*
