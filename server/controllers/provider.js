@@ -9,7 +9,7 @@ import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress } from
 import async from 'async';
 import merge from 'lodash.merge';
 import { deleteAwsImage } from './../helpers/awsUtils'
-import  factoryFirstHundredProviders from'./../helpers/factoryFirstHundredProviders'
+import  factoryFirstHundredProviders from './../helpers/factoryFirstHundredProviders'
 
 function register(req, res, next) {
     let action = 'registerProvider';

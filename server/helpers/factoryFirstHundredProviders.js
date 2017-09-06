@@ -1,7 +1,7 @@
 import FirstHundredProvidersCounter from './../models/firsthundredproviderscounter'
 
-exports default function factoryFirstHundredProviders(cb) {
-    firsthundredproviderscounter.find({}).then(function (promotions) {
+function factoryFirstHundredProviders(cb) {
+    FirstHundredProvidersCounter.find({}).then(function (promotions) {
         if (promotions && promotions instanceof Array && promotions[0]) {
             cb(null, promotions[0]);
         } else {
@@ -12,3 +12,5 @@ exports default function factoryFirstHundredProviders(cb) {
         }
     });
 }
+
+export default factoryFirstHundredProviders;
