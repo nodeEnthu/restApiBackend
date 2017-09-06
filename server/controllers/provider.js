@@ -9,6 +9,7 @@ import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress } from
 import async from 'async';
 import merge from 'lodash.merge';
 import { deleteAwsImage } from './../helpers/awsUtils'
+import  factoryFirstHundredProviders from'./../helpers/factoryFirstHundredProviders'
 
 function register(req, res, next) {
     let action = 'registerProvider';
@@ -66,16 +67,42 @@ function register(req, res, next) {
 }
 
 function publish(req, res, next) {
-    const loggedInUser = req.user;
-    User.findById(loggedInUser, function(err, user) {
+    var loggedInUser = req.user;
+    User.findById(loggedInUser, function (err, user) {
         if (!user) {
             res.send("not able to find the user");
         } else {
             user.published = true;
             user.publishStage = 3;
-            user.save(function(err, savedUser) {
-                res.json({ status: 'ok' });
-            })
+            // check the providers count number
+            async.waterfall([function checkProviderCounter(cb) {
+                if (user.firstHundredProviderCount && user.firstHundredProviderCount > 0) {
+                    // dont do anything ... we have already iuncreased the counter
+                    cb(null, false);
+                } else {
+                    cb(null, true);
+                }
+            }, function updateProviderCountNumber(doUpdate, cb) {
+                if (doUpdate) {
+                    factoryFirstHundredProviders(function (err, factoryObj) {
+                        // check if already isnt there
+                        if (factoryObj.emailIds.indexOf(user.email) === -1) {
+                            var newCount = factoryObj.counter + 1;
+                            user.firstHundredProviderCount = newCount;
+                            factoryObj.counter = newCount;
+                            factoryObj.save(function (err, savedCounterObj) {
+                                cb();
+                            });
+                        } else cb();
+                    });
+                } else {
+                    cb();
+                }
+            }], function (err, result) {
+                user.save(function (err, savedUser) {
+                    res.json({ status: 'ok' });
+                });
+            });
         }
     });
 }
