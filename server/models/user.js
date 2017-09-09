@@ -8,6 +8,7 @@ import APIError from '../helpers/APIError';
 const UserSchema = new mongoose.Schema({
     name: { type: String, default: '' },
     email: { type: String, default: '', index: true },
+    phone:String,
     img: { type: String, default: '' },
     fbUserID: { type: String, default: '' },
     gmailUserID: { type: String, default: '' },
@@ -28,6 +29,7 @@ const UserSchema = new mongoose.Schema({
     imgUrl: { type: String, default: 'https://s3-us-west-1.amazonaws.com/prod-usr-food-imgs/default_profile_pic.jpg' },
     published: { type: Boolean, default: false },
     publishStage: { type: Number, default: 0 },
+    phoneAuthCode:String,
     /*
      * loc will be used to perform geo spatial queries and no other purpose
      * location denotes the most recent location of a provider

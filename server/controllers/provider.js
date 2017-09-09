@@ -139,6 +139,7 @@ function addOrEditFoodItem(req, res, next) {
                          * if changed then delete the one which is replaced
                          **/
                         if (userResponse.imgUrl != foodItem.imgUrl && userResponse.imgUrl != '') {
+                            // check there was an image before
                             if (foodItem.imgUrl != '') {
                                 let imgUrl = foodItem.imgUrl;
                                 let imgName = imgUrl.split('/').pop();
@@ -173,6 +174,9 @@ function addOrEditFoodItem(req, res, next) {
                 // its a new item
                 //create a new entry
                 const foodItem = new FoodItem(req.body);
+                if(foodItem.imgUrl === ''){
+                    foodItem.imgUrl ='https://s3-us-west-1.amazonaws.com/prod-usr-food-imgs/default_food_pic.png';
+                }
                 foodItem._creator = user._id;
                 let currency = (user.currency && user.currency != 'undefined') ? user.currency : '$'
                 foodItem.displayPrice = currency + ' ' + foodItem.price.toString();
