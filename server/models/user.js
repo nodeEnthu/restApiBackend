@@ -8,12 +8,13 @@ import APIError from '../helpers/APIError';
 const UserSchema = new mongoose.Schema({
     name: { type: String, default: '' },
     email: { type: String, default: '', index: true },
+    phone:String,
     img: { type: String, default: '' },
     fbUserID: { type: String, default: '' },
     gmailUserID: { type: String, default: '' },
     userType: { type: String, default: 'consumer' },
     homepageUrl: String,
-    devices:{ type: [String], default: [] },
+    devices: { type: [String], default: [] },
     foodItems: {
         type: [{
             type: mongoose.Schema.Types.ObjectId,
@@ -21,11 +22,14 @@ const UserSchema = new mongoose.Schema({
         }],
         index: true
     },
+    firstHundredProviderCount: { type: Number },
+    promotionEligible: { type: Boolean, default: true },
     service: { type: Number },
     reviewEligibleFoodItems: [],
     imgUrl: { type: String, default: 'https://s3-us-west-1.amazonaws.com/prod-usr-food-imgs/default_profile_pic.jpg' },
     published: { type: Boolean, default: false },
     publishStage: { type: Number, default: 0 },
+    phoneAuthCode:String,
     /*
      * loc will be used to perform geo spatial queries and no other purpose
      * location denotes the most recent location of a provider

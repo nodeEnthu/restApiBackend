@@ -5,6 +5,7 @@ export function filterProviderResponse(provider) {
             name: provider.name,
             img: provider.img,
             email: provider.email,
+            phone:provider.phone,
             userType: provider.userType,
             foodItems: provider.foodItems,
             service: provider.service,
