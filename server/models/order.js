@@ -38,11 +38,13 @@ var Order_Schema = new mongoose.Schema({
     orderType: String,
     subTotal: String,
     currency: String,
+    phone: String,
     modeOfPayment: String,
     mailSentToCustomer: { type: Boolean, default: false },
     mailSentToProvider: { type: Boolean, default: false },
     customerBrowserFingerprint: String,
-    providerBrowserFingerprint: String
+    providerBrowserFingerprint: String,
+    phone:String
 }, { collection: 'orders', timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 export default mongoose.model('Order', Order_Schema);
