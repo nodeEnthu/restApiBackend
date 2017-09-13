@@ -44,7 +44,7 @@ var Order_Schema = new mongoose.Schema({
     mailSentToProvider: { type: Boolean, default: false },
     customerBrowserFingerprint: String,
     providerBrowserFingerprint: String,
-    phone:String
+    phone:{type: String, default:''}
 }, { collection: 'orders', timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 export default mongoose.model('Order', Order_Schema);
