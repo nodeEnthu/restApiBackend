@@ -23,7 +23,10 @@ export function filterProviderResponse(provider) {
             currency: provider.currency,
             searchText: provider.searchText,
             place_id: provider.place_id,
-            displayAddress: provider.displayAddress
+            displayAddress: provider.displayAddress,
+            ordersReceived: provider.ordersReceived,
+            ordersConfirmed: provider.ordersConfirmed,
+            ordersCancelled: provider.ordersCancelled
         }
         return filteredProvider
     } else return provider;

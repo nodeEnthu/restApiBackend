@@ -1,39 +1,8 @@
-import path from 'path';
-import nodemailer from 'nodemailer';
-import email_templates from 'email-templates';
-import smtpTransport from 'nodemailer-smtp-transport';
-import sesTransport from 'nodemailer-ses-transport';
-import config from '../../config/env/index'
+import path from 'path'
 import User from '../models/user';
 import async from 'async';
-import * as plivo from 'plivo';
-
-const ENV = config.env;
-
-const p = plivo.RestAPI({
-    authId: 'MANMYXNGZIMZFMNWEXMG',
-    authToken: 'OGE5ZjNkMzJlZWUxY2Q3NWNhZTAxMTQ1ZGI4NjM1'
-});
-
-const transport = (ENV === 'production') ?
-    nodemailer.createTransport(smtpTransport({
-        host: "email-smtp.us-west-2.amazonaws.com", // Amazon email SMTP hostname
-        secureConnection: true, // use SSL
-        port: 465, // port for secure SMTP
-        auth: {
-            user: "AKIAJ32VGSZIGP2KL4WA", // Use from Amazon Credentials
-            pass: "Aq5LjDkOL8dAGukDDzK6AA60J+LVzamz2vP7wLa30HNE" // Use from Amazon Credentials
-        }
-    })) :
-    nodemailer.createTransport(sesTransport({
-        "accessKeyId": config.ACCESS_KEY_ID,
-        "secretAccessKey": config.SECRET_ACCESS_KEY,
-        "region": 'us-west-2',
-        "rateLimit": 5 // do not send more than 5 messages in a second 
-    }));
-
-let EmailTemplate = email_templates.EmailTemplate;
-const templatesDir = path.resolve(__dirname, '../../');
+import messagingService from './../helpers/phoneMessagingService';
+import {transport, EmailTemplate, templatesDir} from './../helpers/emailService';
 
 function messageProvider(req, res, next) {
     const reqParams = req.body;
@@ -77,18 +46,7 @@ function sendAuthCodeToProvider(req, res, next) {
             })
         },
         function sendSmsToUser(codeGen, cb) {
-            var params = {
-                'src': '19253171387 ', // Sender's phone number with country code
-                'dst': phone, // Receiver's phone Number with country code
-                'text': 'Your authorization code is ' + codeGen
-            };
-            p.send_message(params, function(status, response) {
-                var uuid = response['message_uuid'];
-                var params1 = { 'record_id': uuid };
-                p.get_message(params1, function(status, response1) {
-                    cb(null);
-                });
-            });
+            messagingService(phone, 'Hello from Spoonsnaspanner. Your authorization code is ' + codeGen, cb);
         }
     ], function(err) {
         if (err) {

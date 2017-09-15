@@ -1,38 +1,12 @@
 import path from 'path';
 import async from 'async';
-import nodemailer from 'nodemailer';
-import email_templates from 'email-templates';
-import smtpTransport from 'nodemailer-smtp-transport';
-import sesTransport from 'nodemailer-ses-transport';
 import Order from '../models/order';
 import User from '../models/user';
 import moment from 'moment';
-import config from '../../config/env/index'
 import { sendNotification } from '../helpers/sendNotification'
 import  factoryFirstHundredProviders from'./../helpers/factoryFirstHundredProviders'
-
-const ENV = config.env;
-
-const transport = (ENV === 'production') ?
-    nodemailer.createTransport(smtpTransport({
-        host: "email-smtp.us-west-2.amazonaws.com", // Amazon email SMTP hostname
-        secureConnection: true, // use SSL
-        port: 465, // port for secure SMTP
-        auth: {
-            user: "AKIAJ32VGSZIGP2KL4WA", // Use from Amazon Credentials
-            pass: "Aq5LjDkOL8dAGukDDzK6AA60J+LVzamz2vP7wLa30HNE" // Use from Amazon Credentials
-        }
-    })) :
-    nodemailer.createTransport(sesTransport({
-        "accessKeyId": config.ACCESS_KEY_ID,
-        "secretAccessKey": config.SECRET_ACCESS_KEY,
-        "region": 'us-west-2',
-        "rateLimit": 5 // do not send more than 5 messages in a second 
-    }));
-
-let EmailTemplate = email_templates.EmailTemplate;
-const templatesDir = path.resolve(__dirname, '../../');
-
+import {transport, EmailTemplate, templatesDir} from '../helpers/emailService';
+import messagingService from '../helpers/phoneMessagingService';
 
 function orderSubmit(req, res) {
     /*
@@ -93,10 +67,16 @@ function orderSubmit(req, res) {
                     devices = devices || [];
                     // register in the list of devices
                     if (devices.length > 0) {
+                        // send push notification
                         sendNotification('New order from ' + savedOrder.customerName, devices);
+                    }
+                    let phone = user.phone;
+                    if(phone){
+                        messagingService(phone, 'You have a '+savedOrder.orderType+' order from ' + savedOrder.customerName+'. Please check email and take action. Spoonandspanner.com' , function(){});
                     }
                 }
             })
+            // just initiate the code above and forget
             cb(null, savedOrder);
         },
         function incrementProviderOrderCount(savedOrder, cb) {
