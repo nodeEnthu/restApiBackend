@@ -8,7 +8,7 @@ const p = plivo.RestAPI({
     authToken: 'OGE5ZjNkMzJlZWUxY2Q3NWNhZTAxMTQ1ZGI4NjM1'
 });
 
-function sendSmsToUser(phone, meassage, cb) {
+function sendSmsToUser(phone, message, cb) {
     var params = {
         'src': '19253171387 ', // Sender's phone number with country code
         'dst': phone, // Receiver's phone Number with country code

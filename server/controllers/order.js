@@ -7,6 +7,7 @@ import { sendNotification } from '../helpers/sendNotification'
 import  factoryFirstHundredProviders from'./../helpers/factoryFirstHundredProviders'
 import {transport, EmailTemplate, templatesDir} from '../helpers/emailService';
 import messagingService from '../helpers/phoneMessagingService';
+import config from '../../config/env/index'
 
 function orderSubmit(req, res) {
     /*
@@ -71,8 +72,8 @@ function orderSubmit(req, res) {
                         sendNotification('New order from ' + savedOrder.customerName, devices);
                     }
                     let phone = user.phone;
-                    if(phone){
-                        messagingService(phone, 'You have a '+savedOrder.orderType+' order from ' + savedOrder.customerName+'. Please check email and take action. Spoonandspanner.com' , function(){});
+                    if(phone != ''){
+                        messagingService(phone,'You have a '+savedOrder.orderType+' order from ' + savedOrder.customerName + '. Please check email and take action. Spoonandspanner' , function(){});
                     }
                 }
             })
