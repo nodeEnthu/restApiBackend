@@ -18,5 +18,9 @@ router.route('/addressTypeAssist')
 router.route('/registerMostRecentSearchLocation')
    	/** GET /api/locations/registerMostRecentSearchLocation - Register location for the person */
     .get(ensureAuthenticated,locationCtrl.registerMostRecentSearchLocation);
+router.route('/calcDistance')
+   	/** GET /api/locations/calcDistance - Calculate distance */
+    .get(locationCtrl.calcDistance);
+
 
 export default router;

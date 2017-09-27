@@ -4,7 +4,8 @@ import User from '../models/user';
 import request from 'request'
 import config from '../../config/env/index'
 import { getLatAndLong, saveLocation } from '../helpers/geo'
-
+import async from 'async'
+import geolib from 'geolib'
 /**
  * Load
  */
@@ -57,8 +58,8 @@ function addressTypeAssist(req, res, next) {
     }, function(error, response, body) {
         if (error) {
             res.json({
-                error:error.code || error,
-                addresses:[]
+                error: error.code || error,
+                addresses: []
             })
         } else {
             let resolvedResponse = JSON.parse(body);
@@ -88,12 +89,44 @@ function registerMostRecentSearchLocation(req, res, next) {
                 } else {
                     user = saveLocation(user, result, place_id, address);
                     user.save(function(err, savedUser) {
-                        res.json({status: 'ok'});
+                        res.json({ status: 'ok' });
                     })
                 }
             })
         })
 }
 
+function calcDistance(req,res, next) {
+    let {providerId,customerId } = req.query;
+    const CORRECTION_FACTOR = 1.26;
+    let distance;
+    async.waterfall([
+        function(cb){
+            User.findById(providerId)
+                .exec(function(err,user){
+                    if(user){
+                        cb(null,user.loc);
+                    }else cb('ENOTFOUND');
+                })
+        },function(pt1,cb){
+            User.findById(customerId)
+                .exec(function(err,user){
+                    if(user){
+                        let userLoc = user.userSeachLocations[user.deliveryAddressIndex];
+                        cb(null,pt1,userLoc);
+                    }else cb('ENOTFOUND');
+                })
+        },function(pt1, pt2,cb){
+            if(pt1.coordinates[1] && pt2.coordinates[1]){
+                distance = geolib.getDistance({ latitude: pt1.coordinates[1], longitude: pt1.coordinates[0] }, { latitude: pt2.coordinates[1], longitude: pt2.coordinates[0] });
+            }else cb('ERROR');
+            cb();
+        }],function(err){
+            if(err) res.send({error:err});
+            else res.send({distance:distance * CORRECTION_FACTOR});
+        });
+    
+}
 
-export default { zipcodeTypeAssist, address, addressTypeAssist, registerMostRecentSearchLocation };
+
+export default { zipcodeTypeAssist, address, addressTypeAssist, registerMostRecentSearchLocation, calcDistance };
