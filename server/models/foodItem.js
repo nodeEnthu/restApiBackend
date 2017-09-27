@@ -13,11 +13,9 @@ var FoodItem_Schema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Review'
     }],
-    avalilabilityType:{type:String,default:'onOrder',index: true},
     reviewers:[String],
-    imgUrl: { type: String, default:'https://s3-us-west-1.amazonaws.com/prod-usr-food-imgs/default_food_pic.png' },
+    imgUrl: String,
     placeOrderBy: { type: Number},
-    availability:{type:[Date],index: true },
     pickUpStartTime:String,
     pickUpEndTime:String,
     price:Number,

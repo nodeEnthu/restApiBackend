@@ -51,26 +51,10 @@ function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery
             cb(err, results, stats);
         });
 }
-/*
- * GET /api/query/foodItems
- */
-function foodItems(req, res, next) {
-    // right now just return the foodItem with its provider
-    let limit = 12;
-    let combinedDietCuisineFilters = req.query["combinedDietCuisineFilters"];
-    let filterspageNum = req.query["filterspageNum"] * 0;
-    FoodItem
-        .find(combinedDietCuisineFilters, 'name placeOrderBy serviceDate deliveryFlag pickUpStartTime pickUpEndTime _creator')
-        .populate('_creator', 'name img pickUpFlag doYouDeliverFlag')
-        .skip(filterspageNum)
-        .limit(12)
-        .exec(function(err, foodItems) {
-            res.json(foodItems);
-        });
-}
+
 
 function providers(req, res, next) {
-    let { cuisineSelectedMap, dietSelectedMap, addtnlQuery, guestLocation, filterspageNum, onOrder } = req.query;
+    let { cuisineSelectedMap, dietSelectedMap, addtnlQuery, guestLocation, filterspageNum } = req.query;
     let defaultProviderRadius = 1609 * 10; // 10 miles
     filterspageNum = filterspageNum || 0;
     cuisineSelectedMap = (cuisineSelectedMap) ? JSON.parse(cuisineSelectedMap) : undefined;
@@ -97,11 +81,6 @@ function providers(req, res, next) {
     }
     if (addtnlQuery) {
         addtnlQuery = JSON.parse(addtnlQuery);
-        if (onOrder === "false") {
-            let queryDate = (addtnlQuery.date) ? new Date(addtnlQuery.date) : new Date();
-            foodQuery['foodItems.availability'] = { $gte: queryDate };
-            foodQuery['foodItems.avalilabilityType'] = 'specificDates';
-        } else foodQuery['foodItems.avalilabilityType'] = 'onOrder';
         if (addtnlQuery.orderMode && addtnlQuery.orderMode.length > 0) {
             let orderModeQuery = {};
             switch (addtnlQuery.orderMode) {
@@ -167,8 +146,7 @@ function providers(req, res, next) {
 
             });
         } else res.json({ message: "incorrect use of the api" });
-
     }
 }
 
-export default { foodItems, providers };
+export default { providers };

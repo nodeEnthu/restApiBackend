@@ -108,7 +108,6 @@ function addOrEditFoodItem(req, res, next) {
                     if (!foodItem) {
                         return res.send(404);
                     } else {
-                        foodItem.avalilabilityType = userResponse.avalilabilityType;
                         foodItem.lowcarb = userResponse.lowcarb;
                         foodItem.vegan = userResponse.vegan;
                         foodItem.nondairy = userResponse.nondairy;
@@ -135,7 +134,6 @@ function addOrEditFoodItem(req, res, next) {
                         foodItem.pickUpStartTime = userResponse.pickUpStartTime;
                         foodItem.glutenfree = userResponse.glutenfree;
                         foodItem.nutfree = userResponse.nutfree;
-                        foodItem.availability = userResponse.availability;
                         foodItem.description = userResponse.description;
                         foodItem.placeOrderBy = userResponse.placeOrderBy;
                         foodItem.cuisineType = userResponse.cuisineType;
