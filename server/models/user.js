@@ -22,8 +22,6 @@ const UserSchema = new mongoose.Schema({
         }],
         index: true
     },
-    firstHundredProviderCount: { type: Number },
-    promotionEligible: { type: Boolean, default: true },
     service: { type: Number },
     reviewEligibleFoodItems: [],
     imgUrl: { type: String, default: 'https://s3-us-west-1.amazonaws.com/prod-usr-food-imgs/default_profile_pic.jpg' },

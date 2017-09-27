@@ -42,8 +42,6 @@ var Order_Schema = new mongoose.Schema({
     modeOfPayment: String,
     mailSentToCustomer: { type: Boolean, default: false },
     mailSentToProvider: { type: Boolean, default: false },
-    customerBrowserFingerprint: String,
-    providerBrowserFingerprint: String,
     phone:{type: String, default:''}
 }, { collection: 'orders', timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 

@@ -4,7 +4,6 @@ import Order from '../models/order';
 import User from '../models/user';
 import moment from 'moment';
 import { sendNotification } from '../helpers/sendNotification'
-import  factoryFirstHundredProviders from'./../helpers/factoryFirstHundredProviders'
 import {transport, EmailTemplate, templatesDir} from '../helpers/emailService';
 import messagingService from '../helpers/phoneMessagingService';
 import config from '../../config/env/index'
@@ -17,9 +16,6 @@ function orderSubmit(req, res) {
      *   3. Send a notification to provider
      *   4. return back the order summary with the current status (waiting for provider confirmation)
      */
-
-
-
     async.waterfall([
         function saveOrderInDb(cb) {
             // assume email has been sent to the provider
@@ -188,48 +184,12 @@ function orderConfirmCustomer(req, res) {
                 })
                 cb(null, savedOrder);
             },
-            function incrementProviderConfimCountAndSendPromotion(savedOrder, cb) {
+            function incrementProviderConfimCount(savedOrder, cb) {
                 User.findById(savedOrder._providerId).exec(function(err, user) {
                     if (user) {
                         async.waterfall([function incrementProviderConfirmCount(callback) {
                             user.ordersConfirmed = user.ordersConfirmed + 1;
                             callback(null, user);
-                        }, function checkEligibilityforPromotion(user, callback) {
-                            factoryFirstHundredProviders(function(err, factoryObj) {
-                                if (factoryObj.emailIds.indexOf(user.email) === -1 && factoryObj.counter < 101 && user.promotionEligible === true && savedOrder.providerBrowserFingerprint != savedOrder.customerBrowserFingerprint) {
-                                    user.promotionEligible = false;
-                                    factoryObj.emailIds.push(user.email);
-                                    factoryObj.save(function() {
-                                        callback(null, true);
-                                    });
-                                } else {
-                                    if (savedOrder.providerBrowserFingerprint === savedOrder.customerBrowserFingerprint) {
-                                        factoryObj.browserIdsSame.push({ orderId: savedOrder._id, providerEmail: savedOrder.providerEmailId });
-                                        factoryObj.save();
-                                    }
-                                    callback(null, false);
-                                }
-                            });
-                        }, function(promotionEligible, callback) {
-                            if (promotionEligible) {
-                                var template = new EmailTemplate(path.join(templatesDir,  'provider-coupon'));
-                                template.render({}, function(err, results) {
-                                    if (results && results.html) {
-                                        var mailOptions = {
-                                            from: '"Spoon&Spanner 👥"<admin@spoonandspanner.com>', // sender address
-                                            // to: req.body.customerEmailId + ', ' + req.body.providerEmailId, // list of receivers
-                                            to: req.body.providerEmailId,
-                                            subject: 'Congratulations! you have your coupon', // Subject line
-                                            html: results.html
-                                        };
-                                        transport.sendMail(mailOptions, function(error, info) {
-                                            callback(error, savedOrder);
-                                        });
-                                    } else callback(err, savedOrder);
-                                });
-                            } else {
-                                callback(err, savedOrder);
-                            }
                         }], function() {
                             user.save();
                             cb(null, savedOrder);

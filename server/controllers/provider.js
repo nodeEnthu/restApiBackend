@@ -9,7 +9,6 @@ import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress } from
 import async from 'async';
 import merge from 'lodash.merge';
 import { deleteAwsImage } from './../helpers/awsUtils'
-import  factoryFirstHundredProviders from './../helpers/factoryFirstHundredProviders'
 
 function register(req, res, next) {
     let action = 'registerProvider';
@@ -81,22 +80,6 @@ function publish(req, res, next) {
                     cb(null, false);
                 } else {
                     cb(null, true);
-                }
-            }, function updateProviderCountNumber(doUpdate, cb) {
-                if (doUpdate) {
-                    factoryFirstHundredProviders(function (err, factoryObj) {
-                        // check if already isnt there
-                        if (factoryObj.emailIds.indexOf(user.email) === -1) {
-                            var newCount = factoryObj.counter + 1;
-                            user.firstHundredProviderCount = newCount;
-                            factoryObj.counter = newCount;
-                            factoryObj.save(function (err, savedCounterObj) {
-                                cb();
-                            });
-                        } else cb();
-                    });
-                } else {
-                    cb();
                 }
             }], function (err, result) {
                 user.save(function (err, savedUser) {
