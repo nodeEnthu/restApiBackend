@@ -9,6 +9,8 @@ import imageUploadRoutes from './image-upload';
 import envRoutes from './env';
 import deviceRoutes from './device';
 import messageRoutes from './message'
+import jobRoutes from './job'
+
 const router = express.Router();	// eslint-disable-line new-cap
 
 /** GET /health-check - Check service health */
@@ -29,5 +31,6 @@ router.use('/upload',imageUploadRoutes);
 router.use('/env',envRoutes);
 router.use('/device',deviceRoutes);
 router.use('/message',messageRoutes)
+router.use('/job',jobRoutes)
 
 export default router;

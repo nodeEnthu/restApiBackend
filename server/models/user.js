@@ -1,14 +1,13 @@
 import Promise from 'bluebird';
 import mongoose from 'mongoose';
 import httpStatus from 'http-status';
-import APIError from '../helpers/APIError';
 /**
  * User Schema
  */
 const UserSchema = new mongoose.Schema({
     name: { type: String, default: '' },
     email: { type: String, default: '', index: true },
-    phone:String,
+    phone: String,
     img: { type: String, default: '' },
     fbUserID: { type: String, default: '' },
     gmailUserID: { type: String, default: '' },
@@ -22,12 +21,18 @@ const UserSchema = new mongoose.Schema({
         }],
         index: true
     },
+    jobs: {
+        type:[{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Job'
+        }],default:[]
+    },
     service: { type: Number },
     reviewEligibleFoodItems: [],
     imgUrl: { type: String },
     published: { type: Boolean, default: false },
     publishStage: { type: Number, default: 0 },
-    phoneAuthCode:String,
+    phoneAuthCode: String,
     /*
      * loc will be used to perform geo spatial queries and no other purpose
      * location denotes the most recent location of a provider
@@ -71,6 +76,11 @@ const UserSchema = new mongoose.Schema({
     ordersReceived: { type: Number, default: 0 },
     ordersConfirmed: { type: Number, default: 0 },
     ordersCancelled: { type: Number, default: 0 },
+    jobInvites:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Job',
+        default:[]
+    }],
     state: String,
     country: String,
     currency: String
@@ -93,22 +103,6 @@ UserSchema.method({});
  * Statics
  */
 UserSchema.statics = {
-    /**
-     * Get user
-     * @param {ObjectId} id - The objectId of user.
-     * @returns {Promise<User, APIError>}
-     */
-    get(id) {
-        return this.findById(id)
-            .execAsync().then((user) => {
-                if (user) {
-                    return user;
-                }
-                const err = new APIError('No such user exists!', httpStatus.NOT_FOUND);
-                return Promise.reject(err);
-            });
-    },
-
     /**
      * List users in descending order of 'createdAt' timestamp.
      * @param {number} skip - Number of users to be skipped.
