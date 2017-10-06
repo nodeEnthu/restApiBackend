@@ -197,5 +197,17 @@ export function hire(req, res, next) {
 
     });
 }
+export function getHiredProviders(req, res, next) {
+    const { jobId } = req.query;
+    Job.findById(jobId)
+        .populate({
+            path: 'hirees',
+            select: { 'title': 1, 'phone': 1, 'fullAddress': 1, '_id': 1, 'imgUrl': 1 }
+            
+        })
+        .exec(function(err, docs) {
+            res.send(docs.hirees);
+        });
+}
 
-export default { create, apply, get, inviteProviders, addInvitee, findJobsCloseBy, getApplicants, hire }
+export default { create, apply, get, inviteProviders, addInvitee, findJobsCloseBy, getApplicants, hire, getHiredProviders }
