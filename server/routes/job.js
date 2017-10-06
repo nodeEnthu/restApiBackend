@@ -15,9 +15,18 @@ router.route('/invite/providers')
 	// POST /api/job/invite/providers
 	.get(ensureAuthenticated, jobCtrl.inviteProviders);
 
+
+router.route('/get/applicants')
+	// POST /api/job/get/applicants
+	.get(ensureAuthenticated, jobCtrl.getApplicants);
+
 router.route('/send/invite')
 	// POST /api/job/invite/providers
 	.post(ensureAuthenticated, jobCtrl.addInvitee);
+
+router.route('/send/hire')
+	// POST /api/job/send/hire
+	.post(ensureAuthenticated, jobCtrl.hire);
 
 router.route('/apply')
 	// POST /api/job/apply

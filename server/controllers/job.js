@@ -128,10 +128,10 @@ export function addInvitee(req, res, next) {
             });
         }
     ], function(err, resultArr) {
-        if(!err){
+        if (!err) {
             res.send({ status: 'ok' });
-        }else res.send({ status: 'fail' });
-       
+        } else res.send({ status: 'fail' });
+
     });
 }
 
@@ -161,4 +161,41 @@ export function findJobsCloseBy(req, res, next) {
     )
 }
 
-export default { create, apply, get, inviteProviders, addInvitee, findJobsCloseBy }
+export function getApplicants(req, res, next) {
+    const { jobId } = req.query;
+    Job.findById(jobId)
+        .populate({
+            path: 'applications',
+            populate: {
+                path: '_creator',
+                select: { 'title': 1, 'phone': 1, 'fullAddress': 1, '_id': 1, 'imgUrl': 1 }
+            }
+        })
+        .exec(function(err, docs) {
+            res.send(docs.applications);
+        });
+}
+
+export function hire(req, res, next) {
+    const { jobId, providerId } = req.body;
+    async.parallel([
+        function hirePerson(cb) {
+            Job.findById(jobId, function(err, job) {
+                job.hirees = job.hirees || [];
+                if (job.hirees.indexOf(providerId) === -1) {
+                    job.hirees.push(providerId);
+                }
+                job.save(function() {
+                    cb();
+                });
+            });
+        }
+    ], function(err, resultArr) {
+        if (!err) {
+            res.send({ status: 'ok' });
+        } else res.send({ status: 'fail' });
+
+    });
+}
+
+export default { create, apply, get, inviteProviders, addInvitee, findJobsCloseBy, getApplicants, hire }

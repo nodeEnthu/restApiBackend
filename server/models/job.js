@@ -50,6 +50,11 @@ const JobSchema = new mongoose.Schema({
         ref: 'User',
         default: []
     }],
+    hirees:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: []
+    }],
     loc: {
         type: { type: String, default: 'Point' },
         coordinates: { type: [Number], default: [0, 0] },

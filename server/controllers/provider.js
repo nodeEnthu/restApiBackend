@@ -286,7 +286,6 @@ function remove(req, res, next) {
 }
 function getAllInvitedJobs(req,res,next){
     const loggedInUser = req.user;
-    console.log(loggedInUser);
     let ObjectId = mongoose.Schema.Types.ObjectId;
      Job.find({invitees:{$elemMatch:{$eq:loggedInUser}}})
         .exec(function(err, jobs) {
