@@ -4,6 +4,11 @@ import mongoose from 'mongoose';
  * Job Schema
  */
 const JobSchema = new mongoose.Schema({
+    _creator:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    },
+    title: String,
     partysize: Number,
     serviceType: String,
     frequency: String,
@@ -26,18 +31,24 @@ const JobSchema = new mongoose.Schema({
     ve: Boolean,
     nv: Boolean,
     de: Boolean,
-    br:Boolean,
-    lu:Boolean,
-    di:Boolean,
-    invitees:[{
+    br: Boolean,
+    lu: Boolean,
+    di: Boolean,
+    hired: Boolean,
+    invitees: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        default:[]
+        default: []
     }],
     applications: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Application',
-        default:[]
+        default: []
+    }],
+    applicants: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: []
     }],
     loc: {
         type: { type: String, default: 'Point' },

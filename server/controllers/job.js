@@ -9,10 +9,10 @@ import { transport, EmailTemplate, templatesDir } from './../helpers/emailServic
 
 export function create(req, res, next) {
     const loggedInUser = req.user;
-
     async.waterfall([
         function createJob(cb) {
             let newJob = new Job(req.body);
+            newJob._creator = loggedInUser;
             getLatAndLong(req.body.place_id, function(err, result) {
                 newJob.loc = {
                     "type": "Point",
@@ -22,36 +22,53 @@ export function create(req, res, next) {
                     cb(err, savedJob)
                 })
             })
-        },
-        function(savedJob, cb) {
-            User.findById(loggedInUser, function(err, user) {
-                user.jobs.push(savedJob._id);
-                user.save();
-            })
-            cb(null, savedJob);
         }
     ], function(err, result) {
-        res.send({ result });
+        if (!err) {
+            res.send(result);
+        } else {
+            res.send({ status: 'fail' });
+        }
     });
 }
 
 export function apply(req, res, next) {
     const loggedInUser = req.user;
-    const userResponse = req.body
-    const jobId = userResponse.jobId;
-    let newApplication = new Application({
-        coverLetter: userResponse.coverLetter,
-        _creator: loggedInUser
-    });
-    newApplication.save(function(err, savedApplication) {
-        Job.findById(jobId, function(err, job) {
-            job.applications.push(savedApplication._id);
-            job.save(function(err, savedJob) {
-                if (!err) {
-                    res.send({ savedJob });
-                }
-            });
-        });
+    const { jobId, _id, coverLetter } = req.body;
+    async.waterfall([
+        function findIfValid(cb) {
+            Job.findById(jobId)
+                .populate('applications')
+                .exec(function(err, jobApplications) {
+                    let newApplication = true;
+                    const applications = jobApplications.applications;
+                    applications.forEach(function(application) {
+                        if (application._creator.toString() === loggedInUser) newApplication = false;
+                    })
+                    cb(null, newApplication, jobApplications);
+                })
+        },
+        function createNewApplication(newJob, job, cb) {
+            if (newJob) {
+                let newApplication = new Application({
+                    coverLetter: coverLetter,
+                    _creator: loggedInUser,
+                    jobId: jobId
+                });
+                newApplication.save(function(err, savedApplication) {
+                    job.applications.push(savedApplication._id);
+                    job.applicants.push(loggedInUser);
+                    job.save(function(err, savedJob) {
+                        if (!err) {
+                            cb(null, savedJob, newJob);
+                        }
+                    });
+
+                });
+            } else cb(null, job)
+        }
+    ], function(err, job) {
+        res.send({ status: 'ok' });
     });
 }
 
@@ -86,8 +103,7 @@ export function inviteProviders(req, res, next) {
                 'imgUrl': 1,
                 'name': 1,
                 'email': 1,
-                'shortAddress': 1,
-                'jobInvites': 1
+                'shortAddress': 1
             }
         }, {
             "$sort": { "distance": 1 }
@@ -110,19 +126,12 @@ export function addInvitee(req, res, next) {
                 job.save();
                 cb();
             });
-        },
-        function saveiNProvidersDb(cb) {
-            User.findById(providerId, function(err, user) {
-                user.jobInvites = user.jobInvites || [];
-                if (user.jobInvites.indexOf(jobId) === -1) {
-                    user.jobInvites.push(jobId);
-                }
-                user.save();
-                cb();
-            })
         }
     ], function(err, resultArr) {
-        res.send({ status: 'ok' });
+        if(!err){
+            res.send({ status: 'ok' });
+        }else res.send({ status: 'fail' });
+       
     });
 }
 
@@ -139,7 +148,7 @@ export function findJobsCloseBy(req, res, next) {
                 "maxDistance": 10000,
                 "spherical": true,
                 "distanceMultiplier": 0.001,
-                "query": { "loc.type": "Point"}
+                "query": { "loc.type": "Point" }
             }
         }, {
             "$sort": { "distance": 1 }

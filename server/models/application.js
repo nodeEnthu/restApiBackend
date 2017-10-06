@@ -5,7 +5,11 @@ var Application_Schema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    coverLetter:String    
+    coverLetter:String,
+    jobId : {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Job'
+    }
 }, { collection: 'applications',timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 export default mongoose.model('Application', Application_Schema);

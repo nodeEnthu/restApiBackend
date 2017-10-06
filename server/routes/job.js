@@ -1,6 +1,6 @@
 import express from 'express';
 import jobCtrl from '../controllers/job';
-import ensureAuthenticated, {checkLogin} from '../helpers/ensureAuthenticated';
+import ensureAuthenticated, {userMakingChangeToOwnProfile} from '../helpers/ensureAuthenticated';
 const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/create')
@@ -13,9 +13,13 @@ router.route('/:id')
 
 router.route('/invite/providers')
 	// POST /api/job/invite/providers
-	.get(jobCtrl.inviteProviders);
+	.get(ensureAuthenticated, jobCtrl.inviteProviders);
 
 router.route('/send/invite')
 	// POST /api/job/invite/providers
-	.post(jobCtrl.addInvitee);
+	.post(ensureAuthenticated, jobCtrl.addInvitee);
+
+router.route('/apply')
+	// POST /api/job/apply
+	.post(ensureAuthenticated,userMakingChangeToOwnProfile,  jobCtrl.apply);
 export default router; 

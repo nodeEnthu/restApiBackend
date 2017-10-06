@@ -17,6 +17,9 @@ router.route('/addOrEditFoodItem')
 router.route('/remove')
     // Post /api/providers/remove
     .post(ensureAuthenticated, providerCtrl.remove);
+router.route('/get/job/invites')
+    // Post /api/providers/remove
+    .get(ensureAuthenticated, providerCtrl.getAllInvitedJobs);
 
 
 export default router;

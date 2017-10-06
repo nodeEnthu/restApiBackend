@@ -21,12 +21,6 @@ const UserSchema = new mongoose.Schema({
         }],
         index: true
     },
-    jobs: {
-        type:[{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Job'
-        }],default:[]
-    },
     service: { type: Number },
     reviewEligibleFoodItems: [],
     imgUrl: { type: String },
@@ -76,11 +70,6 @@ const UserSchema = new mongoose.Schema({
     ordersReceived: { type: Number, default: 0 },
     ordersConfirmed: { type: Number, default: 0 },
     ordersCancelled: { type: Number, default: 0 },
-    jobInvites:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Job',
-        default:[]
-    }],
     state: String,
     country: String,
     currency: String

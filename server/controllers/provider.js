@@ -1,5 +1,6 @@
 import User from '../models/user';
 import Order from '../models/order'
+import Job from '../models/job'
 import FoodItem from '../models/foodItem'
 import Review from '../models/review'
 import jwt from 'jwt-simple';
@@ -9,6 +10,7 @@ import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress } from
 import async from 'async';
 import merge from 'lodash.merge';
 import { deleteAwsImage } from './../helpers/awsUtils'
+import mongoose from 'mongoose'
 
 function register(req, res, next) {
     let action = 'registerProvider';
@@ -282,5 +284,14 @@ function remove(req, res, next) {
         });
     } else res.json({ error: "incorrect use of api" });
 }
+function getAllInvitedJobs(req,res,next){
+    const loggedInUser = req.user;
+    console.log(loggedInUser);
+    let ObjectId = mongoose.Schema.Types.ObjectId;
+     Job.find({invitees:{$elemMatch:{$eq:loggedInUser}}})
+        .exec(function(err, jobs) {
+            res.send(jobs);
+        })
+}
 
-export default { register, addOrEditFoodItem, publish, remove };
+export default { register, addOrEditFoodItem, publish, remove, getAllInvitedJobs };
