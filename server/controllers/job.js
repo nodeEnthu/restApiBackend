@@ -97,13 +97,16 @@ export function inviteProviders(req, res, next) {
         }, {
             $project: {
                 'distance': 1,
+                'description':1,
                 'title': 1,
                 'serviceOffered': 1,
                 'phone': 1,
                 'imgUrl': 1,
                 'name': 1,
                 'email': 1,
-                'shortAddress': 1
+                'fullAddress': 1,
+                'serviceOffered': 1,
+                'methodsOfPayment': 1
             }
         }, {
             "$sort": { "distance": 1 }
@@ -168,7 +171,20 @@ export function getApplicants(req, res, next) {
             path: 'applications',
             populate: {
                 path: '_creator',
-                select: { 'title': 1, 'phone': 1, 'fullAddress': 1, '_id': 1, 'imgUrl': 1 }
+                select: {
+                    'distance': 1,
+                    'title': 1,
+                                    'description':1,
+
+                    'serviceOffered': 1,
+                    'phone': 1,
+                    'imgUrl': 1,
+                    'name': 1,
+                    'email': 1,
+                    'fullAddress': 1,
+                    'serviceOffered': 1,
+                    'methodsOfPayment': 1
+                }
             }
         })
         .exec(function(err, docs) {
@@ -202,12 +218,33 @@ export function getHiredProviders(req, res, next) {
     Job.findById(jobId)
         .populate({
             path: 'hirees',
-            select: { 'title': 1, 'phone': 1, 'fullAddress': 1, '_id': 1, 'imgUrl': 1 }
-            
+            select: {
+                'distance': 1,
+                'title': 1,
+                                'description':1,
+
+                'serviceOffered': 1,
+                'phone': 1,
+                'imgUrl': 1,
+                'name': 1,
+                'email': 1,
+                'fullAddress': 1,
+                'serviceOffered': 1,
+                'methodsOfPayment': 1
+            }
+
         })
         .exec(function(err, docs) {
             res.send(docs.hirees);
         });
 }
 
-export default { create, apply, get, inviteProviders, addInvitee, findJobsCloseBy, getApplicants, hire, getHiredProviders }
+export function list(req, res, next) {
+    const loggedInUser = req.user;
+    Job.find({ _creator: loggedInUser })
+        .exec(function(err, docs) {
+            res.send(docs);
+        });
+}
+
+export default { create, apply, get, inviteProviders, addInvitee, findJobsCloseBy, getApplicants, hire, getHiredProviders, list }

@@ -11,6 +11,10 @@ router.route('/:id')
 	// POST /api/job/create
 	.get(ensureAuthenticated, jobCtrl.get);
 
+router.route('/list')
+	// POST /api/job/create
+	.get(ensureAuthenticated, jobCtrl.list);
+
 router.route('/invite/providers')
 	// POST /api/job/invite/providers
 	.get(ensureAuthenticated, jobCtrl.inviteProviders);
@@ -25,7 +29,7 @@ router.route('/get/hirees')
 	.get(ensureAuthenticated, jobCtrl.getHiredProviders);
 
 router.route('/send/invite')
-	// POST /api/job/invite/providers
+	// POST /api/job/send/invite
 	.post(ensureAuthenticated, jobCtrl.addInvitee);
 
 router.route('/send/hire')
