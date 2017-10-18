@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 /**
  * Job Schema
  */
+
 const JobSchema = new mongoose.Schema({
     _creator:{
         type: mongoose.Schema.Types.ObjectId,
@@ -11,30 +12,17 @@ const JobSchema = new mongoose.Schema({
     title: String,
     partysize: Number,
     serviceType: String,
-    frequency: String,
     address: String,
     place_id: String,
     addtnlAddressComments: String,
+    addtnlCustomerComments:String,
     start_date: Date,
     end_date: Date,
-    sun: Boolean,
-    mon: Boolean,
-    tue: Boolean,
-    wed: Boolean,
-    thu: Boolean,
-    fri: Boolean,
-    sat: Boolean,
-    sun: Boolean,
-    ni: Boolean,
-    si: Boolean,
-    ch: Boolean,
-    ve: Boolean,
-    nv: Boolean,
-    de: Boolean,
-    br: Boolean,
-    lu: Boolean,
-    di: Boolean,
-    hired: Boolean,
+    budget:Number,
+    doneHiring:Boolean,
+    cuisines:{ type: [String], default: [] },
+    meals:{ type: [String], default: [] },
+    weekdays:{ type: [String], default: [] },
     invitees: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

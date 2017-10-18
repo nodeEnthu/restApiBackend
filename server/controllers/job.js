@@ -6,6 +6,8 @@ import Application from '../models/application'
 import async from 'async';
 import messagingService from './../helpers/phoneMessagingService';
 import { transport, EmailTemplate, templatesDir } from './../helpers/emailService';
+import { sendNotification } from '../helpers/sendNotification'
+import moment from 'moment'
 
 export function create(req, res, next) {
     const loggedInUser = req.user;
@@ -19,8 +21,39 @@ export function create(req, res, next) {
                     "coordinates": [result.longitude, result.latitude]
                 };
                 newJob.save(function(err, savedJob) {
-                    cb(err, savedJob)
-                })
+                    cb(err, savedJob);
+                });
+            })
+        },
+        function sendConfirmationToUser(jobDetails, cb) {
+            let template = new EmailTemplate(path.join(templatesDir, 'job-posted-customer'));
+            User.findById(loggedInUser, function(err, user) {
+                if (user) {
+                    let devices = user.devices;
+                    devices = devices || [];
+                    // register in the list of devices
+                    if (devices.length > 0) {
+                        // send push notification
+                        sendNotification('Your tiffin requirement is live', devices);
+                    }
+                    let phone = user.phone;
+                    req.body.start_date = moment.utc(jobDetails.start_date).format("ddd, MMM Do");
+                    req.body.end_date = moment.utc(jobDetails.end_date).format("ddd, MMM Do");
+                    req.body.jobId = jobDetails._id;
+                    template.render(req.body, function(error, results) {
+                        if (results && results.html) {
+                            let mailOptions = {
+                                from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
+                                // to: req.body.customerEmailId + ', ' + req.body.providerEmailId, // list of receivers
+                                to: user.email,
+                                subject: 'Your tiffin requirement is live', // Subject line
+                                html: results.html, // html body
+                            };
+                            transport.sendMail(mailOptions, function(error, info) {});
+                            cb(error, jobDetails);
+                        } else cb(err, jobDetails);
+                    });
+                } else cb(err, jobDetails);
             })
         }
     ], function(err, result) {
@@ -48,8 +81,8 @@ export function apply(req, res, next) {
                     cb(null, newApplication, jobApplications);
                 })
         },
-        function createNewApplication(newJob, job, cb) {
-            if (newJob) {
+        function createNewApplication(newApplication, job, cb) {
+            if (newApplication) {
                 let newApplication = new Application({
                     coverLetter: coverLetter,
                     _creator: loggedInUser,
@@ -60,12 +93,46 @@ export function apply(req, res, next) {
                     job.applicants.push(loggedInUser);
                     job.save(function(err, savedJob) {
                         if (!err) {
-                            cb(null, savedJob, newJob);
+                            cb(null, JSON.parse(JSON.stringify(savedJob)), newApplication);
                         }
                     });
 
                 });
             } else cb(null, job)
+        },
+        function emailCustomerAboutNewProposal(jobDetails, newApplication, cb) {
+            console.log(jobDetails);
+            if (newApplication) {
+                let template = new EmailTemplate(path.join(templatesDir, 'job-proposal-customer'));
+                User.findById(jobDetails._creator, function(err, user) {
+                    if (user) {
+                        let devices = user.devices;
+                        devices = devices || [];
+                        // register in the list of devices
+                        if (devices.length > 0) {
+                            // send push notification
+                            sendNotification('You have been invited to apply', devices);
+                        }
+                        let phone = user.phone;
+                        jobDetails.start_date = moment.utc(jobDetails.start_date).format("ddd, MMM Do");
+                        jobDetails.end_date = moment.utc(jobDetails.end_date).format("ddd, MMM Do");
+                        jobDetails.providerId = _id;
+                        template.render(jobDetails, function(error, results) {
+                            console.log(error,results);
+                            if (results && results.html) {
+                                let mailOptions = {
+                                    from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
+                                    to: user.email,
+                                    subject: 'New proposal for: ' + jobDetails.title, // Subject line
+                                    html: results.html, // html body
+                                };
+                                transport.sendMail(mailOptions, function(error, info) {});
+                                cb(error, jobDetails);
+                            } else cb(err, jobDetails);
+                        });
+                    } else cb(err, jobDetails);
+                })
+            } else cb();
         }
     ], function(err, job) {
         res.send({ status: 'ok' });
@@ -97,7 +164,7 @@ export function inviteProviders(req, res, next) {
         }, {
             $project: {
                 'distance': 1,
-                'description':1,
+                'description': 1,
                 'title': 1,
                 'serviceOffered': 1,
                 'phone': 1,
@@ -119,7 +186,7 @@ export function inviteProviders(req, res, next) {
 
 export function addInvitee(req, res, next) {
     const { jobId, providerId } = req.body;
-    async.parallel([
+    async.waterfall([
         function addInviteeToJob(cb) {
             Job.findById(jobId, function(err, job) {
                 job.invitees = job.invitees || [];
@@ -127,8 +194,39 @@ export function addInvitee(req, res, next) {
                     job.invitees.push(providerId);
                 }
                 job.save();
-                cb();
+                cb(err, JSON.parse(JSON.stringify(job)));
             });
+        },
+        function sendInviteToProvider(jobDetails, cb) {
+            let template = new EmailTemplate(path.join(templatesDir, 'job-invite-provider'));
+            User.findById(providerId, function(err, user) {
+                if (user) {
+                    let devices = user.devices;
+                    devices = devices || [];
+                    // register in the list of devices
+                    if (devices.length > 0) {
+                        // send push notification
+                        sendNotification('You have been invited to apply', devices);
+                    }
+                    let phone = user.phone;
+                    jobDetails.start_date = moment.utc(jobDetails.start_date).format("ddd, MMM Do");
+                    jobDetails.end_date = moment.utc(jobDetails.end_date).format("ddd, MMM Do");
+                    template.render(jobDetails, function(error, results) {
+                        console.log(error,results);
+
+                        if (results && results.html) {
+                            let mailOptions = {
+                                from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
+                                to: user.email,
+                                subject: 'You have been invited to apply', // Subject line
+                                html: results.html, // html body
+                            };
+                            transport.sendMail(mailOptions, function(error, info) {});
+                            cb(error, jobDetails);
+                        } else cb(err, jobDetails);
+                    });
+                } else cb(err, jobDetails);
+            })
         }
     ], function(err, resultArr) {
         if (!err) {
@@ -174,7 +272,7 @@ export function getApplicants(req, res, next) {
                 select: {
                     'distance': 1,
                     'title': 1,
-                                    'description':1,
+                    'description': 1,
 
                     'serviceOffered': 1,
                     'phone': 1,
@@ -194,17 +292,58 @@ export function getApplicants(req, res, next) {
 
 export function hire(req, res, next) {
     const { jobId, providerId } = req.body;
-    async.parallel([
+    const loggedInUser = req.user;
+    async.waterfall([
         function hirePerson(cb) {
             Job.findById(jobId, function(err, job) {
                 job.hirees = job.hirees || [];
                 if (job.hirees.indexOf(providerId) === -1) {
                     job.hirees.push(providerId);
                 }
-                job.save(function() {
-                    cb();
+                job.save(function(err,savedJob) {
+                    cb(err, JSON.parse(JSON.stringify(savedJob)));
                 });
             });
+        },
+        function sendHireEmailToProvider(jobDetails, cb) {
+            let template = new EmailTemplate(path.join(templatesDir, 'job-hired-provider'));
+            User.findById(loggedInUser, function(err, consumer) {
+                if (consumer) {
+                    User.findById(providerId, function(err, user) {
+                        if (user) {
+                            let devices = user.devices;
+                            devices = devices || [];
+                            // register in the list of devices
+                            if (devices.length > 0) {
+                                // send push notification
+                                sendNotification('You are hired for a tiffin requirement', devices);
+                            }
+                            let phone = user.phone;
+                            if (phone != '') {
+                                //messagingService(phone, 'Hired for ' + jobDetails.title, function() {});
+                            }
+                            jobDetails.start_date = moment.utc(jobDetails.start_date).format("ddd, MMM Do");
+                            jobDetails.end_date = moment.utc(jobDetails.end_date).format("ddd, MMM Do");
+                            jobDetails.phone= consumer.phone;
+                            jobDetails.email = consumer.email;
+                            template.render(jobDetails, function(error, results) {
+                                console.log(error,results);
+                                if (results && results.html) {
+                                    let mailOptions = {
+                                        from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
+                                        to: user.email,
+                                        subject: 'Hired for '+jobDetails.title, // Subject line
+                                        html: results.html, // html body
+                                    };
+                                    transport.sendMail(mailOptions, function(error, info) {});
+                                    cb(error, jobDetails);
+                                } else cb(err, jobDetails);
+                            });
+                        } else cb(err, jobDetails);
+                    })
+                } else cb();
+            })
+
         }
     ], function(err, resultArr) {
         if (!err) {
@@ -221,8 +360,7 @@ export function getHiredProviders(req, res, next) {
             select: {
                 'distance': 1,
                 'title': 1,
-                                'description':1,
-
+                'description': 1,
                 'serviceOffered': 1,
                 'phone': 1,
                 'imgUrl': 1,

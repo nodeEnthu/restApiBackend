@@ -8,24 +8,28 @@ router.route('/create')
 	.post(ensureAuthenticated, jobCtrl.create);
 
 router.route('/:id')
-	// POST /api/job/create
+	// GET /api/job/:id
 	.get(ensureAuthenticated, jobCtrl.get);
 
-router.route('/list')
-	// POST /api/job/create
+router.route('/list/all')
+	// GET /api/job/list
 	.get(ensureAuthenticated, jobCtrl.list);
 
 router.route('/invite/providers')
-	// POST /api/job/invite/providers
+	// GET /api/job/invite/providers
 	.get(ensureAuthenticated, jobCtrl.inviteProviders);
 
 
 router.route('/get/applicants')
-	// POST /api/job/get/applicants
+	// GET /api/job/get/applicants
 	.get(ensureAuthenticated, jobCtrl.getApplicants);
 
+router.route('/get/closeby')
+	// GET /api/job/get/closeby
+	.get(ensureAuthenticated, jobCtrl.findJobsCloseBy);
+
 router.route('/get/hirees')
-	// POST /api/job/get/hirees
+	// GET /api/job/get/hirees
 	.get(ensureAuthenticated, jobCtrl.getHiredProviders);
 
 router.route('/send/invite')
