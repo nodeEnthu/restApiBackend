@@ -8,6 +8,7 @@ import messagingService from './../helpers/phoneMessagingService';
 import { transport, EmailTemplate, templatesDir } from './../helpers/emailService';
 import { sendNotification } from '../helpers/sendNotification'
 import moment from 'moment'
+import config from '../../config/env/index'
 
 export function create(req, res, next) {
     const loggedInUser = req.user;
@@ -39,7 +40,7 @@ export function create(req, res, next) {
                     let phone = user.phone;
                     req.body.start_date = moment.utc(jobDetails.start_date).format("ddd, MMM Do");
                     req.body.end_date = moment.utc(jobDetails.end_date).format("ddd, MMM Do");
-                    req.body.jobId = jobDetails._id;
+                    req.body.actionUrl = config.homeUrl + "job/" + jobDetails._id + "/invite";
                     template.render(req.body, function(error, results) {
                         if (results && results.html) {
                             let mailOptions = {
@@ -101,7 +102,6 @@ export function apply(req, res, next) {
             } else cb(null, job)
         },
         function emailCustomerAboutNewProposal(jobDetails, newApplication, cb) {
-            console.log(jobDetails);
             if (newApplication) {
                 let template = new EmailTemplate(path.join(templatesDir, 'job-proposal-customer'));
                 User.findById(jobDetails._creator, function(err, user) {
@@ -117,8 +117,8 @@ export function apply(req, res, next) {
                         jobDetails.start_date = moment.utc(jobDetails.start_date).format("ddd, MMM Do");
                         jobDetails.end_date = moment.utc(jobDetails.end_date).format("ddd, MMM Do");
                         jobDetails.providerId = _id;
+                        jobDetails.actionUrl = config.homeUrl + "job/" + jobDetails._id + "/proposals";
                         template.render(jobDetails, function(error, results) {
-                            console.log(error,results);
                             if (results && results.html) {
                                 let mailOptions = {
                                     from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
@@ -141,8 +141,11 @@ export function apply(req, res, next) {
 
 export function get(req, res, next) {
     let id = req.params.id;
+    const loggedInUser = req.user;
     Job.findById(id, function(err, job) {
-        res.send({ job });
+        if (job._creator.toString() === loggedInUser) {
+            res.send({ job });
+        } else res.status(401).send({ message: 'not authorized' });
     });
 }
 
@@ -186,15 +189,20 @@ export function inviteProviders(req, res, next) {
 
 export function addInvitee(req, res, next) {
     const { jobId, providerId } = req.body;
+    const loggedInUser = req.user;
     async.waterfall([
         function addInviteeToJob(cb) {
             Job.findById(jobId, function(err, job) {
-                job.invitees = job.invitees || [];
-                if (job.invitees.indexOf(providerId) === -1) {
-                    job.invitees.push(providerId);
+                if (job._creator.toString() === loggedInUser) {
+                    job.invitees = job.invitees || [];
+                    if (job.invitees.indexOf(providerId) === -1) {
+                        job.invitees.push(providerId);
+                    }
+                    job.save();
+                    cb(err, JSON.parse(JSON.stringify(job)));
+                } else {
+                    cb(new Error('not authorized'));
                 }
-                job.save();
-                cb(err, JSON.parse(JSON.stringify(job)));
             });
         },
         function sendInviteToProvider(jobDetails, cb) {
@@ -211,9 +219,8 @@ export function addInvitee(req, res, next) {
                     let phone = user.phone;
                     jobDetails.start_date = moment.utc(jobDetails.start_date).format("ddd, MMM Do");
                     jobDetails.end_date = moment.utc(jobDetails.end_date).format("ddd, MMM Do");
+                    jobDetails.actionUrl = config.homeUrl + "job/apply/board";
                     template.render(jobDetails, function(error, results) {
-                        console.log(error,results);
-
                         if (results && results.html) {
                             let mailOptions = {
                                 from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
@@ -238,32 +245,41 @@ export function addInvitee(req, res, next) {
 
 export function findJobsCloseBy(req, res, next) {
     const { latitude, longitude } = req.query;
-    Job.aggregate(
-        [{
-            "$geoNear": {
-                "near": {
-                    "type": "Point",
-                    "coordinates": [parseFloat(longitude), parseFloat(latitude)]
-                },
-                "distanceField": "distance",
-                "maxDistance": 10000,
-                "spherical": true,
-                "distanceMultiplier": 0.001,
-                "query": { "loc.type": "Point" }
-            }
-        }, {
-            "$sort": { "distance": 1 }
-        }, {
-            "$limit": 12
-        }],
-        function(err, results) {
-            res.send({ results });
-        }
-    )
+    const loggedInUser = req.user;
+    User.findById(loggedInUser, function(err, user) {
+        if (user) {
+            let longitude = user.loc.coordinates[0];
+            let latitude = user.loc.coordinates[1];
+            Job.aggregate(
+                [{
+                    "$geoNear": {
+                        "near": {
+                            "type": "Point",
+                            "coordinates": [parseFloat(longitude), parseFloat(latitude)]
+                        },
+                        "distanceField": "distance",
+                        "maxDistance": 10000,
+                        "spherical": true,
+                        "distanceMultiplier": 0.001,
+                        "query": { "loc.type": "Point" }
+                    }
+                }, {
+                    "$sort": { "distance": 1 }
+                }, {
+                    "$limit": 12
+                }],
+                function(err, results) {
+                    res.send({ results });
+                }
+            )
+        } else res.status(401).send({ message: 'not authorized' });
+    })
+
 }
 
 export function getApplicants(req, res, next) {
     const { jobId } = req.query;
+    const loggedInUser = req.user;
     Job.findById(jobId)
         .populate({
             path: 'applications',
@@ -286,7 +302,10 @@ export function getApplicants(req, res, next) {
             }
         })
         .exec(function(err, docs) {
-            res.send(docs.applications);
+            if (loggedInUser === docs._creator.toString()) {
+                res.send(docs.applications);
+            } else res.status(401).send({ message: 'not authorized' });
+
         });
 }
 
@@ -296,13 +315,15 @@ export function hire(req, res, next) {
     async.waterfall([
         function hirePerson(cb) {
             Job.findById(jobId, function(err, job) {
-                job.hirees = job.hirees || [];
-                if (job.hirees.indexOf(providerId) === -1) {
-                    job.hirees.push(providerId);
-                }
-                job.save(function(err,savedJob) {
-                    cb(err, JSON.parse(JSON.stringify(savedJob)));
-                });
+                if (job._creator.toString() === loggedInUser) {
+                    job.hirees = job.hirees || [];
+                    if (job.hirees.indexOf(providerId) === -1) {
+                        job.hirees.push(providerId);
+                    }
+                    job.save(function(err, savedJob) {
+                        cb(err, JSON.parse(JSON.stringify(savedJob)));
+                    });
+                } else cb(new Error('not authorized'));
             });
         },
         function sendHireEmailToProvider(jobDetails, cb) {
@@ -324,15 +345,15 @@ export function hire(req, res, next) {
                             }
                             jobDetails.start_date = moment.utc(jobDetails.start_date).format("ddd, MMM Do");
                             jobDetails.end_date = moment.utc(jobDetails.end_date).format("ddd, MMM Do");
-                            jobDetails.phone= consumer.phone;
+                            jobDetails.phone = consumer.phone;
                             jobDetails.email = consumer.email;
+                            jobDetails.actionUrl = config.homeUrl + "job/apply/board";
                             template.render(jobDetails, function(error, results) {
-                                console.log(error,results);
                                 if (results && results.html) {
                                     let mailOptions = {
                                         from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
                                         to: user.email,
-                                        subject: 'Hired for '+jobDetails.title, // Subject line
+                                        subject: 'Hired for ' + jobDetails.title, // Subject line
                                         html: results.html, // html body
                                     };
                                     transport.sendMail(mailOptions, function(error, info) {});
@@ -354,6 +375,7 @@ export function hire(req, res, next) {
 }
 export function getHiredProviders(req, res, next) {
     const { jobId } = req.query;
+    const loggedInUser = req.user;
     Job.findById(jobId)
         .populate({
             path: 'hirees',
@@ -373,7 +395,10 @@ export function getHiredProviders(req, res, next) {
 
         })
         .exec(function(err, docs) {
-            res.send(docs.hirees);
+            if (loggedInUser === docs._creator.toString()) {
+                res.send(docs.hirees);
+            } else res.status(401).send({ message: 'not authorized' });
+
         });
 }
 
