@@ -198,15 +198,7 @@ function list(req, res, next) {
     res.json({key:'noop'});
 }
 
-/**
- * Delete user.
- * @returns {User}
- */
-function remove(req, res, next) {
-    const user = req.user;
-    user.removeAsync()
-        .then((deletedUser) => res.json(deletedUser))
-        .error((e) => next(e));
-}
 
-export default { load, get, create, update, list, remove, profileEdit };
+
+
+export default { load, get, create, update, list, profileEdit };

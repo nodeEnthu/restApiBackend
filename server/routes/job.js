@@ -43,4 +43,5 @@ router.route('/send/hire')
 router.route('/apply')
 	// POST /api/job/apply
 	.post(ensureAuthenticated,userMakingChangeToOwnProfile,  jobCtrl.apply);
+
 export default router; 

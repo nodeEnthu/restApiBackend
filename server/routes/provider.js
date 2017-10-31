@@ -20,6 +20,8 @@ router.route('/remove')
 router.route('/get/job/invites')
     // Post /api/providers/remove
     .get(ensureAuthenticated, providerCtrl.getAllInvitedJobs);
-
+router.route('/check/unique/name')
+    // Post /api/providers/check/unique/name
+    .get(providerCtrl.checkUniqueProviderName);
 
 export default router;

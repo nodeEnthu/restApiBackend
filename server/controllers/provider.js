@@ -11,6 +11,8 @@ import async from 'async';
 import merge from 'lodash.merge';
 import { deleteAwsImage } from './../helpers/awsUtils'
 import mongoose from 'mongoose'
+import UniqueProviderNames from '../models/uniqueprovidernames'
+
 
 function register(req, res, next) {
     let action = 'registerProvider';
@@ -31,45 +33,96 @@ function register(req, res, next) {
         default:
             serviceOfferedCode = 1;
     }
-    User.findById(loggedInUser, function(err, user) {
-        if (!user) {
-            res.send("not able to find the user");
-        } else {
-            getLatAndLong(place_id, function(err, result) {
-                if (err) {
-                    res.json({ error: err });
-                } else {
-                    user.userType = 'provider';
-                    user.title = userResponse.title;
-                    user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
-                    user.description = userResponse.description;
-                    user.email = userResponse.email;
-                    user.serviceOffered = serviceOfferedCode;
-                    user.addtnlComments = userResponse.addtnlComments;
-                    user.deliveryMinOrder = userResponse.deliveryMinOrder;
-                    user.deliveryRadius = userResponse.deliveryRadius;
-                    user.imgUrl = userResponse.imgUrl;
-                    user.methodsOfPayment = userResponse.methodsOfPayment;
-                    user = saveLocation(user, result, place_id, searchText, action);
-                    // now we are ready to go to publish stage 2 .. so 2 instead of 1
-                    user.publishStage = 2;
-                    user.save(function(err, savedUser) {
-                        if (err) {
-                            res.status(500);
-                            res.send({ err: err })
-                        }
-                        res.json({ status: 'ok' });
-                    })
-                }
+    async.waterfall([
+        // detect whether its an edit or a new entry and whether person has made a change to their titles
+        function(cb) {
+            User.findById(loggedInUser, function(err, user) {
+                if (!user) {
+                    cb(err, true, null)
+                    // its an edit and user has not changed title
+                } else if (user && user.title === userResponse.title) {
+                    cb(null, false, null);
+                } else cb(null, true, user.title);
             })
+        },
+        // perform validation id person has changed business title
+        function(performCheck, lastTitle, cb) {
+            // check if the name is unique
+            if (performCheck) {
+                UniqueProviderNames.find({}, function(err, uniqueProvidersDocs) {
+                    if (!err) {
+                        if (uniqueProvidersDocs.length === 0) {
+                            let createNewDoc = new UniqueProviderNames();
+                            createNewDoc.titles.push(userResponse.title);
+                            createNewDoc.save(function(err) {
+                                cb(null, true);
+                            });
+                        } else {
+                            let uniqueProviders = uniqueProvidersDocs[0];
+                            if (uniqueProviders.titles.indexOf(userResponse.title) === -1) {
+                                // remove the last used name from the unique list
+                                if (lastTitle) {
+                                    let index = uniqueProviders.titles.indexOf(lastTitle);
+                                    if (index >= 0) uniqueProviders.titles.splice(index, 1);
+                                }
+                                uniqueProviders.titles.push(userResponse.title);
+                                uniqueProviders.save(function() {
+                                    cb(null, true);
+                                })
+                            } else cb(null, false);
+                        }
+                    } else cb(err);
+                })
+            } else cb(null, true);
+        },
+        function(uniqueName, cb) {
+            if (uniqueName) {
+                User.findById(loggedInUser, function(err, user) {
+                    if (!user) {
+                        res.send("not able to find the user");
+                    } else {
+                        getLatAndLong(place_id, function(err, result) {
+                            if (err) {
+                                res.json({ error: err });
+                            } else {
+                                user.userType = 'provider';
+                                user.title = userResponse.title;
+                                user.keepAddressPrivateFlag = userResponse.keepAddressPrivateFlag;
+                                user.description = userResponse.description;
+                                user.email = userResponse.email;
+                                user.serviceOffered = serviceOfferedCode;
+                                user.addtnlComments = userResponse.addtnlComments;
+                                user.deliveryMinOrder = userResponse.deliveryMinOrder;
+                                user.deliveryRadius = userResponse.deliveryRadius;
+                                user.imgUrl = userResponse.imgUrl;
+                                user.methodsOfPayment = userResponse.methodsOfPayment;
+                                user = saveLocation(user, result, place_id, searchText, action);
+                                // now we are ready to go to publish stage 2 .. so 2 instead of 1
+                                user.publishStage = 2;
+                                user.save(function(err, savedUser) {
+                                    cb(err);
+                                })
+                            }
+                        })
+                    }
+
+                });
+            } else {
+                cb('code11241');
+            }
+
         }
+    ], function(err, resultArr) {
+        if (err) {
+            res.send({ status: err })
+        } else res.json({ status: 'ok' });
 
     });
 }
 
 function publish(req, res, next) {
     var loggedInUser = req.user;
-    User.findById(loggedInUser, function (err, user) {
+    User.findById(loggedInUser, function(err, user) {
         if (!user) {
             res.send("not able to find the user");
         } else {
@@ -83,8 +136,8 @@ function publish(req, res, next) {
                 } else {
                     cb(null, true);
                 }
-            }], function (err, result) {
-                user.save(function (err, savedUser) {
+            }], function(err, result) {
+                user.save(function(err, savedUser) {
                     res.json({ status: 'ok' });
                 });
             });
@@ -157,8 +210,8 @@ function addOrEditFoodItem(req, res, next) {
                 // its a new item
                 //create a new entry
                 const foodItem = new FoodItem(req.body);
-                if(foodItem.imgUrl === ''){
-                    foodItem.imgUrl ='https://s3-us-west-1.amazonaws.com/prod-usr-food-imgs/default_food_pic.png';
+                if (foodItem.imgUrl === '') {
+                    foodItem.imgUrl = 'https://s3-us-west-1.amazonaws.com/prod-usr-food-imgs/default_food_pic.png';
                 }
                 foodItem._creator = user._id;
                 let currency = (user.currency && user.currency != 'undefined') ? user.currency : '$'
@@ -284,13 +337,41 @@ function remove(req, res, next) {
         });
     } else res.json({ error: "incorrect use of api" });
 }
-function getAllInvitedJobs(req,res,next){
+
+function getAllInvitedJobs(req, res, next) {
     const loggedInUser = req.user;
     let ObjectId = mongoose.Schema.Types.ObjectId;
-     Job.find({invitees:{$elemMatch:{$eq:loggedInUser}}})
+    Job.find({ invitees: { $elemMatch: { $eq: loggedInUser } } })
         .exec(function(err, jobs) {
             res.send(jobs);
         })
 }
 
-export default { register, addOrEditFoodItem, publish, remove, getAllInvitedJobs };
+function checkUniqueNames(title, cb) {
+    UniqueProviderNames.find({}, function(err, uniqueProvidersDocs) {
+        if (!err) {
+            if (uniqueProvidersDocs.length === 0) {
+                let createNewDoc = new UniqueProviderNames();
+                createNewDoc.save(function(err) {
+                    cb(null, true);
+                });
+            } else {
+                let uniqueProviders = uniqueProvidersDocs[0];
+                if (uniqueProviders.titles.indexOf(title) === -1) {
+                    cb(null, true);
+                } else cb(null, false);
+            }
+        } else cb(err);
+    })
+}
+
+function checkUniqueProviderName(req, res, next) {
+    let { title } = req.query;
+    checkUniqueNames(title, function(err, result) {
+        if (!err) {
+            res.send({ unique: result });
+        } else res.send({ status: 'fail' });
+    })
+}
+
+export default { register, addOrEditFoodItem, publish, remove, getAllInvitedJobs, checkUniqueProviderName };

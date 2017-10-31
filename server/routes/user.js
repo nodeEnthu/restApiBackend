@@ -28,7 +28,5 @@ router.route('/:userId/profileEdit')
 /** PUT /api/users/:userId - Update user */
 .put(validate(paramValidation.updateUser), userCtrl.update)
 
-/** DELETE /api/users/:userId - Delete user */
-.delete(userCtrl.remove);
 
 export default router;

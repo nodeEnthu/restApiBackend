@@ -5,7 +5,7 @@ import httpStatus from 'http-status';
  * User Schema
  */
 const UserSchema = new mongoose.Schema({
-    name: { type: String, default: '' },
+    name: { type: String, default: '', index: true },
     email: { type: String, default: '', index: true },
     phone: String,
     img: { type: String, default: '' },
@@ -61,7 +61,7 @@ const UserSchema = new mongoose.Schema({
      */
     serviceOffered: { type: Number, default: 1 },
     addtnlComments: { type: String, default: '' },
-    title: String,
+    title: { type: String, default: '', index: true },
     keepAddressPrivateFlag: { type: Boolean, default: false },
     methodsOfPayment: [Number],
     description: String,

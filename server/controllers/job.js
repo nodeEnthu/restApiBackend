@@ -410,4 +410,6 @@ export function list(req, res, next) {
         });
 }
 
+
+
 export default { create, apply, get, inviteProviders, addInvitee, findJobsCloseBy, getApplicants, hire, getHiredProviders, list }
