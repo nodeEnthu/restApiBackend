@@ -30,8 +30,9 @@ function register(req, res, next) {
         case "delivery":
             serviceOfferedCode = 3;
             break;
-        default:
-            serviceOfferedCode = 1;
+        default :
+            serviceOfferedCode = userResponse.serviceOffered;
+            break;
     }
     async.waterfall([
         // detect whether its an edit or a new entry and whether person has made a change to their titles

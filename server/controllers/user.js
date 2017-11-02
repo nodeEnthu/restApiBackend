@@ -4,7 +4,7 @@ import moment from 'moment';
 import config from '../../config/env/index'
 import { getLatAndLong, saveLocation, getDisplayAddress, getSearchAddress, getProviderAddress } from '../helpers/geo'
 import async from 'async';
-import {filterProviderResponse} from '../helpers/filterProviderResponse'
+import { filterProviderResponse } from '../helpers/filterProviderResponse'
 /**
  * Create JWT token
  */
@@ -53,7 +53,7 @@ function profileEdit(req, res) {
         .lean()
         .exec(function(err, userAndFoodItems) {
             // lets insert correct address
-            
+
             userAndFoodItems.searchText = getProviderAddress(userAndFoodItems).address;
             userAndFoodItems.place_id = getProviderAddress(userAndFoodItems).place_id;
             userAndFoodItems = filterProviderResponse(userAndFoodItems);
@@ -81,7 +81,13 @@ function get(req, res) {
             } else cb(null, [])
         },
         function getUserAndFoodItems(reviewEligibleFoodItems, cb) {
-            User.findById(userId)
+            let findObject;
+            if (userId.match(/^[0-9a-fA-F]{24}$/)) { // if it's indeed an ObjectID
+                findObject = { _id: userId };
+            } else {
+                findObject = { title: userId.replace(/_/g, " ") };
+            }
+            User.findOne(findObject)
                 .populate('foodItems')
                 .lean()
                 .exec(function(err, userAndFoodItems) {
@@ -103,8 +109,10 @@ function get(req, res) {
                                 if (loggedInUser === '') {
                                     foodItem.enableReview = false;
                                 } else if (foodItem._creator != loggedInUser // creator should not be able to review own item
-                                    && reviewEligibleFoodItems.indexOf(foodItem._id) > -1 // user is eligible for review
-                                    && foodItem.reviewers.indexOf(loggedInUser) === -1) { // user has not submitted the review already
+                                    &&
+                                    reviewEligibleFoodItems.indexOf(foodItem._id) > -1 // user is eligible for review
+                                    &&
+                                    foodItem.reviewers.indexOf(loggedInUser) === -1) { // user has not submitted the review already
                                     foodItem.enableReview = true;
                                 } else {
                                     foodItem.enableReview = false;
@@ -162,7 +170,7 @@ function create(req, res, next) {
                         // show a modal on fe for user to edit name and email
                         res.send({
                             user: savedUser,
-                            firstTime:true,
+                            firstTime: true,
                             token: token
                         });
                     })
@@ -195,7 +203,7 @@ function update(req, res, next) {
  * @returns {User[]}
  */
 function list(req, res, next) {
-    res.json({key:'noop'});
+    res.json({ key: 'noop' });
 }
 
 
