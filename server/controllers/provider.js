@@ -12,7 +12,10 @@ import merge from 'lodash.merge';
 import { deleteAwsImage } from './../helpers/awsUtils'
 import mongoose from 'mongoose'
 import UniqueProviderNames from '../models/uniqueprovidernames'
-
+import ProviderPromo from '../models/providerpromo';
+import ProviderPromotionAnalytics from '../models/providerpromotionanalytics';
+import { transport, EmailTemplate, templatesDir } from './../helpers/emailService';
+import path from 'path'
 
 function register(req, res, next) {
     let action = 'registerProvider';
@@ -30,7 +33,7 @@ function register(req, res, next) {
         case "delivery":
             serviceOfferedCode = 3;
             break;
-        default :
+        default:
             serviceOfferedCode = userResponse.serviceOffered;
             break;
     }
@@ -375,4 +378,134 @@ function checkUniqueProviderName(req, res, next) {
     })
 }
 
-export default { register, addOrEditFoodItem, publish, remove, getAllInvitedJobs, checkUniqueProviderName };
+function registerEmailSentProviderPromotion(req, res, next) {
+    let { refId } = req.query;
+    let n = 3
+
+    function sendEmailToProvider(emailAndId, success) {
+        let template = new EmailTemplate(path.join(templatesDir, 'invite-provider-enrollment'));
+        return function(cb) {
+            template.render({ actionUrl: 'https://spoonandspanner/how/it/works/provider?refId=' + emailAndId.uniqueId }, function(error, results) {
+                if (results && results.html) {
+                    let mailOptions = {
+                        from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
+                        to: emailAndId.email,
+                        subject: 'Dear home chef provide your food with us ', // Subject line
+                        html: results.html, // html body
+                    };
+                    transport.sendMail(mailOptions, function(error, info) {
+                        if (!error) {
+                            success.push(emailAndId.uniqueId);
+                        }
+                        // keep going if if it failed
+                        cb(null);
+                    });
+
+                } else cb();
+            });
+        }
+    }
+
+    async.waterfall([
+        function getNProviderEmailIds(cb) {
+            let emailAndIdsToBeSent = [];
+            ProviderPromo.find({}, function(err, providers) {
+                for (let i = 0; i < n; i++) {
+                    emailAndIdsToBeSent.push({ email: providers[i].email, uniqueId: providers[i].uniqueId });
+                }
+                cb(err, emailAndIdsToBeSent);
+            })
+        },
+        function sendEmails(emailAndIdsToBeSent, cb) {
+            let sendEmailToProviderArr = [],
+                success = [];
+            console.log('**** emailAndIdsToBeSent ****', emailAndIdsToBeSent);
+            emailAndIdsToBeSent.forEach(function(emailAndId, index) {
+                sendEmailToProviderArr.push(sendEmailToProvider(emailAndId, success))
+            })
+            async.parallel(sendEmailToProviderArr, function(err, resultArr) {
+                cb(err, emailAndIdsToBeSent, success);
+            })
+        },
+        function updateAnalytics(emailAndIdsToBeSent, success, cb) {
+            ProviderPromotionAnalytics.findOne({}, function(err, analytics) {
+                let newAnalytics = analytics || new ProviderPromotionAnalytics();
+                emailAndIdsToBeSent.forEach(function(emailAndId) {
+                    newAnalytics.emailSent.push(emailAndId.uniqueId);
+                })
+                success.forEach(function(uniqueId) {
+                    newAnalytics.success.push(uniqueId);
+                })
+                newAnalytics.save(function() {
+                    cb(null, emailAndIdsToBeSent, success)
+                })
+            })
+        }
+    ], function(err, resultArr) {
+        res.send({ emails: resultArr });
+    })
+}
+
+function providerPromoEmailClickAnalytics(req, res, next) {
+    let { refId } = req.body;
+    ProviderPromotionAnalytics.findOne({}, function(err, newAnalytics) {
+        if (newAnalytics.enrollPageViewed.indexOf(refId) === -1) {
+            newAnalytics.enrollPageViewed.push(refId);
+            newAnalytics.save(function() {
+                res.send({ status: 'ok' })
+            })
+        } else res.send({ status: 'already registered' })
+    })
+}
+
+function providerEnrollmentStartedAnalytics(req, res, next) {
+    let { refId } = req.body;
+    ProviderPromotionAnalytics.findOne({}, function(err, newAnalytics) {
+        if (newAnalytics.providerEnrollmentStarted.indexOf(refId) === -1) {
+            newAnalytics.providerEnrollmentStarted.push(refId);
+            newAnalytics.save(function() {
+                res.send({ status: 'ok' })
+            })
+        } else res.send({ status: 'already registered' })
+    })
+}
+
+function foodItemEnrollmentStartedAnalytics(req, res, next) {
+    let { refId } = req.body;
+    ProviderPromotionAnalytics.findOne({}, function(err, newAnalytics) {
+        if (newAnalytics.foodItemEnrollmentStarted.indexOf(refId) === -1) {
+            newAnalytics.foodItemEnrollmentStarted.push(refId);
+            newAnalytics.save(function() {
+                res.send({ status: 'ok' })
+            })
+        } else res.send({ status: 'already registered' })
+    })
+}
+
+function publishStartedAnalytics(req, res, next) {
+    let { refId } = req.body;
+    ProviderPromotionAnalytics.findOne({}, function(err, newAnalytics) {
+        if (newAnalytics.publishStarted.indexOf(refId) === -1) {
+            newAnalytics.publishStarted.push(refId);
+            newAnalytics.save(function() {
+                res.send({ status: 'ok' })
+            })
+        } else res.send({ status: 'already registered' })
+    })
+}
+
+
+
+export default {
+    register,
+    addOrEditFoodItem,
+    publish,
+    remove,
+    getAllInvitedJobs,
+    checkUniqueProviderName,
+    registerEmailSentProviderPromotion,
+    providerPromoEmailClickAnalytics,
+    providerEnrollmentStartedAnalytics,
+    foodItemEnrollmentStartedAnalytics,
+    publishStartedAnalytics
+};

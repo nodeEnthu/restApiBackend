@@ -24,4 +24,24 @@ router.route('/check/unique/name')
     // Post /api/providers/check/unique/name
     .get(providerCtrl.checkUniqueProviderName);
 
+router.route('/email/promo')
+    // Post /api/providers/email/promo
+    .get(providerCtrl.registerEmailSentProviderPromotion);
+
+router.route('/analytics/provider/promo/click')
+    // Post /api/providers/analytics/provider/promo/click
+    .post(providerCtrl.providerPromoEmailClickAnalytics);
+
+router.route('/analytics/profile/started')
+    // Post /api/providers/analytics/profile/started
+    .post(providerCtrl.providerEnrollmentStartedAnalytics);
+
+router.route('/analytics/foodItem/started')
+    // Post /api/providers/analytics/foodItem/started
+    .post(providerCtrl.foodItemEnrollmentStartedAnalytics);
+
+router.route('/analytics/publish/started')
+    // Post /api/providers/analytics/publish/started
+    .post(providerCtrl.publishStartedAnalytics);
+
 export default router;
