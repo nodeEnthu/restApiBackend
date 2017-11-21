@@ -380,17 +380,17 @@ function checkUniqueProviderName(req, res, next) {
 
 function registerEmailSentProviderPromotion(req, res, next) {
     let { refId } = req.query;
-    let n = 3
+    let n = 500;
 
     function sendEmailToProvider(emailAndId, success) {
         let template = new EmailTemplate(path.join(templatesDir, 'invite-provider-enrollment'));
         return function(cb) {
-            template.render({ actionUrl: 'https://spoonandspanner/how/it/works/provider?refId=' + emailAndId.uniqueId }, function(error, results) {
+            template.render({ actionUrl: 'https://spoonandspanner.com/how/it/works/provider?refId=' + emailAndId.uniqueId }, function(error, results) {
                 if (results && results.html) {
                     let mailOptions = {
-                        from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
+                        from: '"Spoon&Spanner 👥"<admin@spoonandspanner.com>', // sender address
                         to: emailAndId.email,
-                        subject: 'Dear home chef provide your food with us ', // Subject line
+                        subject: 'Home chef! provide your food with us', // Subject line
                         html: results.html, // html body
                     };
                     transport.sendMail(mailOptions, function(error, info) {
@@ -398,7 +398,10 @@ function registerEmailSentProviderPromotion(req, res, next) {
                             success.push(emailAndId.uniqueId);
                         }
                         // keep going if if it failed
-                        cb(null);
+                        setTimeout(function(){
+                            cb(null);
+                        },200)
+                        
                     });
 
                 } else cb();
@@ -410,7 +413,7 @@ function registerEmailSentProviderPromotion(req, res, next) {
         function getNProviderEmailIds(cb) {
             let emailAndIdsToBeSent = [];
             ProviderPromo.find({}, function(err, providers) {
-                for (let i = 0; i < n; i++) {
+                for (let i =250; i < n; i++) {
                     emailAndIdsToBeSent.push({ email: providers[i].email, uniqueId: providers[i].uniqueId });
                 }
                 cb(err, emailAndIdsToBeSent);
@@ -419,7 +422,6 @@ function registerEmailSentProviderPromotion(req, res, next) {
         function sendEmails(emailAndIdsToBeSent, cb) {
             let sendEmailToProviderArr = [],
                 success = [];
-            console.log('**** emailAndIdsToBeSent ****', emailAndIdsToBeSent);
             emailAndIdsToBeSent.forEach(function(emailAndId, index) {
                 sendEmailToProviderArr.push(sendEmailToProvider(emailAndId, success))
             })
@@ -449,7 +451,7 @@ function registerEmailSentProviderPromotion(req, res, next) {
 function providerPromoEmailClickAnalytics(req, res, next) {
     let { refId } = req.body;
     ProviderPromotionAnalytics.findOne({}, function(err, newAnalytics) {
-        if (newAnalytics.enrollPageViewed.indexOf(refId) === -1) {
+        if (refId && newAnalytics.enrollPageViewed.indexOf(refId) === -1) {
             newAnalytics.enrollPageViewed.push(refId);
             newAnalytics.save(function() {
                 res.send({ status: 'ok' })
@@ -461,7 +463,7 @@ function providerPromoEmailClickAnalytics(req, res, next) {
 function providerEnrollmentStartedAnalytics(req, res, next) {
     let { refId } = req.body;
     ProviderPromotionAnalytics.findOne({}, function(err, newAnalytics) {
-        if (newAnalytics.providerEnrollmentStarted.indexOf(refId) === -1) {
+        if (refId && newAnalytics.providerEnrollmentStarted.indexOf(refId) === -1) {
             newAnalytics.providerEnrollmentStarted.push(refId);
             newAnalytics.save(function() {
                 res.send({ status: 'ok' })
@@ -473,7 +475,7 @@ function providerEnrollmentStartedAnalytics(req, res, next) {
 function foodItemEnrollmentStartedAnalytics(req, res, next) {
     let { refId } = req.body;
     ProviderPromotionAnalytics.findOne({}, function(err, newAnalytics) {
-        if (newAnalytics.foodItemEnrollmentStarted.indexOf(refId) === -1) {
+        if (refId && newAnalytics.foodItemEnrollmentStarted.indexOf(refId) === -1) {
             newAnalytics.foodItemEnrollmentStarted.push(refId);
             newAnalytics.save(function() {
                 res.send({ status: 'ok' })
@@ -485,7 +487,7 @@ function foodItemEnrollmentStartedAnalytics(req, res, next) {
 function publishStartedAnalytics(req, res, next) {
     let { refId } = req.body;
     ProviderPromotionAnalytics.findOne({}, function(err, newAnalytics) {
-        if (newAnalytics.publishStarted.indexOf(refId) === -1) {
+        if (refId && newAnalytics.publishStarted.indexOf(refId) === -1) {
             newAnalytics.publishStarted.push(refId);
             newAnalytics.save(function() {
                 res.send({ status: 'ok' })
