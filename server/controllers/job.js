@@ -22,7 +22,7 @@ export function create(req, res, next) {
                     "coordinates": [result.longitude, result.latitude]
                 };
                 newJob.save(function(err, savedJob) {
-                    cb(err, savedJob);
+                    cb(err, JSON.parse(JSON.stringify(savedJob)));
                 });
             })
         },
@@ -54,8 +54,53 @@ export function create(req, res, next) {
                             cb(error, jobDetails);
                         } else cb(err, jobDetails);
                     });
-                } else cb(err, jobDetails);
+                } else cb({ status: 'fail', error: 'usernotfound' });
             })
+        },
+        function findCloseByProviders(jobDetails, cb) {
+            const latitude = jobDetails.loc.coordinates[1];
+            const longitude = jobDetails.loc.coordinates[0];
+            // find closeby providers
+            User.aggregate(
+                [{
+                    "$geoNear": {
+                        "near": {
+                            "type": "Point",
+                            "coordinates": [parseFloat(longitude), parseFloat(latitude)]
+                        },
+                        "distanceField": "distance",
+                        "maxDistance": 9000,
+                        "spherical": true,
+                        "distanceMultiplier": 0.001,
+                        "query": { "loc.type": "Point", published: true, userType: "provider" }
+                    }
+                }, {
+                    $project: {
+                        'distance': 1,
+                        'email': 1,
+                        'serviceOffered': 1,
+                        'devices': 1
+                    }
+                }],
+                function(err, results) {
+                    cb(err, results, jobDetails)
+                }
+            )
+        },
+        function emailProviders(providers, jobDetails, cb) {
+            if (providers && providers.length > 0) {
+                let emailCloseByProvidersFuncArr = [];
+                providers.forEach(function(provider) {
+                    if (['autoenthu@gmail.com,aruna.mehra762@gmail.com', 'gautam.mehra762@gmail.com'].indexOf(provider.email) > -1) {
+                        console.log(provider.email);
+                        emailCloseByProvidersFuncArr.push(sendNewJobEmailToCLoseByProvider(provider, jobDetails));
+                    }
+                })
+                async.parallel(emailCloseByProvidersFuncArr, function(err) {
+                    // dont do anything
+                })
+            }
+            cb(null, jobDetails);
         }
     ], function(err, result) {
         if (!err) {
@@ -99,7 +144,7 @@ export function apply(req, res, next) {
                     });
 
                 });
-            } else cb(null, job)
+            } else cb(null, job, null)
         },
         function emailCustomerAboutNewProposal(jobDetails, newApplication, cb) {
             if (newApplication) {
@@ -246,28 +291,37 @@ export function addInvitee(req, res, next) {
 export function findJobsCloseBy(req, res, next) {
     const { latitude, longitude } = req.query;
     const loggedInUser = req.user;
+    let now = new Date();
+    const nowUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getDate(), 0, 0, 0));
     User.findById(loggedInUser, function(err, user) {
         if (user) {
             let longitude = user.loc.coordinates[0];
             let latitude = user.loc.coordinates[1];
             Job.aggregate(
                 [{
-                    "$geoNear": {
-                        "near": {
-                            "type": "Point",
-                            "coordinates": [parseFloat(longitude), parseFloat(latitude)]
-                        },
-                        "distanceField": "distance",
-                        "maxDistance": 10000,
-                        "spherical": true,
-                        "distanceMultiplier": 0.001,
-                        "query": { "loc.type": "Point" }
+                        "$geoNear": {
+                            "near": {
+                                "type": "Point",
+                                "coordinates": [parseFloat(longitude), parseFloat(latitude)]
+                            },
+                            "distanceField": "distance",
+                            "maxDistance": 6000,
+                            "spherical": true,
+                            "distanceMultiplier": 0.001,
+                            "query": { "loc.type": "Point" }
+                        }
+                    }, {
+                        "$sort": { "distance": 1 }
+                    }, {
+                        "$limit": 12
+                    },
+                    {
+                        $match: {
+                            end_date: { $gte: nowUtc },
+                            doneHiring: { $ne: true }
+                        }
                     }
-                }, {
-                    "$sort": { "distance": 1 }
-                }, {
-                    "$limit": 12
-                }],
+                ],
                 function(err, results) {
                     res.send({ results });
                 }
@@ -289,7 +343,6 @@ export function getApplicants(req, res, next) {
                     'distance': 1,
                     'title': 1,
                     'description': 1,
-
                     'serviceOffered': 1,
                     'phone': 1,
                     'imgUrl': 1,
@@ -410,6 +463,38 @@ export function list(req, res, next) {
         });
 }
 
+function sendNewJobEmailToCLoseByProvider(provider, jobDetails) {
+    return function(cb) {
+        let devices = provider.devices;
+        let template = new EmailTemplate(path.join(templatesDir, 'new-job-notification'));
+        devices = devices || [];
+        jobDetails.start_date = moment.utc(jobDetails.start_date).format("ddd, MMM Do");
+        jobDetails.end_date = moment.utc(jobDetails.end_date).format("ddd, MMM Do");
+        jobDetails.actionUrl = config.homeUrl + "job/apply/board";
+        provider.distance = parseFloat(provider.distance.toFixed(2));
+        
+        // register in the list of devices
+        if (devices.length > 0) {
+            // send push notification
+            sendNotification('New tiffin need: ' + jobDetails.title + ' ' + provider.distance + ' kms away', devices);
+        }
+        let phone = provider.phone;
+        
+        template.render(jobDetails, function(error, results) {
+            if (results && results.html) {
+                let mailOptions = {
+                    from: '"Spoon&Spanner 👥"<support@spoonandspanner.com>', // sender address
+                    to: provider.email,
+                    subject: 'New tiffin need: ' + jobDetails.title + ' ' + provider.distance + ' kms away', // Subject line
+                    html: results.html, // html body
+                };
+                transport.sendMail(mailOptions, function(error, info) {});
+                cb();
+            } else cb(); // ignore the error
+        });
+    }
+
+}
 
 
 export default { create, apply, get, inviteProviders, addInvitee, findJobsCloseBy, getApplicants, hire, getHiredProviders, list }

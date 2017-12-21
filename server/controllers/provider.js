@@ -380,7 +380,7 @@ function checkUniqueProviderName(req, res, next) {
 
 function registerEmailSentProviderPromotion(req, res, next) {
     let { refId } = req.query;
-    let n = 500;
+    let n = 598;
 
     function sendEmailToProvider(emailAndId, success) {
         let template = new EmailTemplate(path.join(templatesDir, 'invite-provider-enrollment'));
@@ -413,7 +413,7 @@ function registerEmailSentProviderPromotion(req, res, next) {
         function getNProviderEmailIds(cb) {
             let emailAndIdsToBeSent = [];
             ProviderPromo.find({}, function(err, providers) {
-                for (let i =250; i < n; i++) {
+                for (let i =400; i < n; i++) {
                     emailAndIdsToBeSent.push({ email: providers[i].email, uniqueId: providers[i].uniqueId });
                 }
                 cb(err, emailAndIdsToBeSent);

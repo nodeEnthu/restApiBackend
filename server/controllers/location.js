@@ -56,6 +56,7 @@ function addressTypeAssist(req, res, next) {
             key: config.GOOGLE_PLACES_SECRET
         }
     }, function(error, response, body) {
+        console.log(error);
         if (error) {
             res.json({
                 error: error.code || error,
