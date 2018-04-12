@@ -91,10 +91,7 @@ export function create(req, res, next) {
             if (providers && providers.length > 0) {
                 let emailCloseByProvidersFuncArr = [];
                 providers.forEach(function(provider) {
-                    if (['autoenthu@gmail.com,aruna.mehra762@gmail.com', 'gautam.mehra762@gmail.com'].indexOf(provider.email) > -1) {
-                        console.log(provider.email);
-                        emailCloseByProvidersFuncArr.push(sendNewJobEmailToCLoseByProvider(provider, jobDetails));
-                    }
+                    emailCloseByProvidersFuncArr.push(sendNewJobEmailToCLoseByProvider(provider, jobDetails));
                 })
                 async.parallel(emailCloseByProvidersFuncArr, function(err) {
                     // dont do anything
@@ -478,8 +475,6 @@ function sendNewJobEmailToCLoseByProvider(provider, jobDetails) {
             // send push notification
             sendNotification('New tiffin need: ' + jobDetails.title + ' ' + provider.distance + ' kms away', devices);
         }
-        let phone = provider.phone;
-        
         template.render(jobDetails, function(error, results) {
             if (results && results.html) {
                 let mailOptions = {
