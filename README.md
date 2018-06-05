@@ -22,10 +22,6 @@ This is a REST APIs in Node.js for spoonandspanner using ES6 and Express. Follow
 ## Getting Started
 
 Clone the repo:
-```sh
-git clone git@github.com:KunalKapadia/express-mongoose-es6-rest-api.git
-cd express-mongoose-es6-rest-api
-```
 
 Install dependencies:
 ```sh
