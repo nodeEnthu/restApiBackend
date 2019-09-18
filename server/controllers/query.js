@@ -39,7 +39,8 @@ function combinedQuery(latitude, longitude, defaultProviderRadius, providerQuery
                 'loc': 1,
                 'foodItems': 1,
                 'serviceOffered': 1,
-                'title':1
+                'title':1,
+                'imgUrl': 1
             }
         }, {
             "$sort": { "distance": 1 }

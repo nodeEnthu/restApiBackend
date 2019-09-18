@@ -1,6 +1,6 @@
 export default {
     env: 'production',
-    db:'mongodb://gautam:sawan_rattan_219_337@ds151122-a0.mlab.com:51122,ds151122-a1.mlab.com:51122/prod?replicaSet=rs-ds151122',
+    db: 'mongodb://gautam_prod:R%40ttanjr2@ds127436.mlab.com:27436/prod',
     port: 8081,
     homeUrl:'https://spoonandspanner.com/',
     TOKEN_SECRET: '219_337_1455_2793',

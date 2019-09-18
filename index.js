@@ -2,7 +2,6 @@ import Promise from 'bluebird';
 import mongoose from 'mongoose';
 import config from './config/env';
 import app from './config/express';
-import SocketIo from 'socket.io';
 
 // promisify mongoose
 Promise.promisifyAll(mongoose);
@@ -20,7 +19,7 @@ app.listen(config.port, () => {
 	debug(`server started on port ${config.port} (${config.env})`);
 });
 
-app.get('/', function(req, res) {
+app.get('*', function(req, res) {
 	res.sendFile(path.join(__dirname + '/public/index.html'));
 });
 
